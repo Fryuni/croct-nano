@@ -1,0 +1,53 @@
+{
+  "name": "croct-nano",
+  "version": "0.0.0-dev",
+  "description": "A Nanostore for Croct interactions.",
+  "author": {
+    "name": "Luiz Ferraz",
+    "email": "luiz+lib-croct-nano@lferraz.com",
+    "url": "https://github.com/Fryuni/croct-nano"
+  },
+  "license": "MIT",
+  "keywords": [
+    "croct",
+    "personalization",
+    "typescript"
+  ],
+  "exports": {
+    ".": {
+      "default": "./build/index.js",
+      "types": "./build/index.d.ts"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Fryuni/croct-nano.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Fryuni/croct-nano/issues"
+  },
+  "homepage": "https://github.com/Fryuni/croct-nano",
+  "scripts": {
+    "lint": "eslint 'src/**/*.ts' 'test/**/*.ts'",
+    "test": "jest -c jest.config.js --coverage",
+    "validate": "tsc --noEmit",
+    "build": "tsc -p tsconfig.build.json"
+  },
+  "devDependencies": {
+    "@croct/eslint-plugin": "^0.7.0",
+    "@swc/jest": "^0.2.24",
+    "@types/jest": "^29.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.22",
+    "jest": "^29.0.0",
+    "jest-extended": "^4.0.0",
+    "ts-node": "^10.8.2",
+    "typescript": "^5.0.0"
+  },
+  "files": [
+    "README.md",
+    "build/**/*.js",
+    "build/**/*.ts",
+    "src/**/*.ts"
+  ]
+}

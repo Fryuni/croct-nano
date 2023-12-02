@@ -1,5 +1,7 @@
 # build output
 dist/
+build/
+coverage/
 
 # dependencies
 node_modules/
