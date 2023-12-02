@@ -32,10 +32,10 @@ import SvelteCounter from '../components/svelte/SvelteCounter.svelte';
 			<script>
 				import {setName} from '../components/state';
 
-				const form = document.getElementById("nameForm");
+				const form = document.getElementById("nameForm") as HTMLFormElement;
 				form.addEventListener("submit", (event) => {
 					event.preventDefault();
-					const input = document.getElementById("userName");
+					const input = document.getElementById("userName") as HTMLInputElement;
 
 					const userName = input.value;
 					input.value = "";

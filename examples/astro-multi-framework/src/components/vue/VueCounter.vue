@@ -9,7 +9,7 @@ const store = useStore(homeBannerStore);
   <div class="card">
     <div style="align: center">Vue</div>
     <h1>{{store.content.title}}</h1>
-    <div className="text"><strong>{{store.content.subtitle}}</strong></div>
+    <div class="text"><strong>{{store.content.subtitle}}</strong></div>
     <p>
       <a href="{{store.content.cta.link}}">{{store.content.cta.label}}</a>
     </p>

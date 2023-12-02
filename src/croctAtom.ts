@@ -1,13 +1,13 @@
 import croct from '@croct/plug';
-import {FetchOptions, FetchResponse} from '@croct/plug/plug';
-import {JsonObject} from '@croct/plug/sdk/json';
-import {SlotContent, VersionedSlotId} from '@croct/plug/slot';
-import {action, atom, onMount, ReadableAtom, task} from 'nanostores';
+import type {FetchOptions, FetchResponse} from '@croct/plug/plug';
+import type {JsonObject} from '@croct/plug/sdk/json';
+import type {SlotContent, VersionedSlotId} from '@croct/plug/slot';
+import {action, atom, onMount, task, type WritableAtom} from 'nanostores';
 
 const sign = Symbol('croctStore');
 
 export type CroctAtom<P extends JsonObject = JsonObject, I extends VersionedSlotId = string> =
-    ReadableAtom<FetchResponse<I, P>>
+    WritableAtom<FetchResponse<I, P>>
     & {
     refresh: (options?: FetchOptions) => Promise<void>,
     [sign]: {
@@ -47,7 +47,7 @@ export function croctContent<P extends JsonObject, I extends VersionedSlotId>(
     return croctAtom;
 }
 
-export function autoRefresh(store: CroctAtom): void {
+export function autoRefresh(store: CroctAtom<any, any>): void {
     onMount(store, () => {
         const interval = setInterval(store.refresh, 2000);
 

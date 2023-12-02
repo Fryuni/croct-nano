@@ -5,7 +5,7 @@
     <br />
     <strong>[UNNOFICIAL] Croct + Nanostore</strong>
     <br />
-    A Nanostore for Croct interactions.
+    A NanoStore atom for Croct content.
 </p>
 <p align="center">
     <img alt="Build" src="https://img.shields.io/badge/build-passing-green" />
@@ -64,7 +64,7 @@ yarn test
 Run the following command to check the code against the style guide:
 
 ```sh
-yarnlint
+yarn lint
 ```
 
 ## Building
@@ -75,18 +75,8 @@ Before building the project, the dependencies must be installed:
 yarn
 ```
 
-Then, to build the CommonJS module:
+Then, build with
 
 ```sh
-yarn rollup
+yarn build
 ```
-
-The following command bundles a minified IIFE module for browsers:
-
-```
-yarn rollup-min
-```
-
-## License
-
-Logo and "Croct" brand are owned by Croct Limited.
