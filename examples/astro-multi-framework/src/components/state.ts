@@ -27,18 +27,16 @@ autoRefresh(homeBannerStore);
 
 export const setName = action(homeBannerStore, 'setName', (_: CroctAtom, name: string) => {
     task(
-        () => {
+        async () => {
+            const patch = croct.user.edit();
+
             if (name === '') {
-                return croct.user
-                    .edit()
-                    .unset('custom.name')
-                    .save();
+                patch.unset('custom.name');
+            } else {
+                patch.set('custom.name', name);
             }
 
-            return croct.user
-                .edit()
-                .set('custom.name', name)
-                .save();
+            await patch.save();
         },
     );
 });
