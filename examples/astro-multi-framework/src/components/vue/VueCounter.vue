@@ -1,20 +1,17 @@
 <script setup>
 import {useStore} from '@nanostores/vue';
-import {$counter, delta} from '../state';
+import {homeBannerStore} from '../state';
 
-const count = useStore($counter);
-
-const add = () => delta(1);
-const subtract = () => delta(-1);
+const store = useStore(homeBannerStore);
 </script>
 
 <template>
   <div class="card">
-    <div class="text"><slot /></div>
-    <div class="counter">
-      <button @click="subtract()">-</button>
-      <pre>{{count}}</pre>
-      <button @click="add()">+</button>
-    </div>
+    <div style="align: center">Vue</div>
+    <h1>{{store.content.title}}</h1>
+    <div className="text"><strong>{{store.content.subtitle}}</strong></div>
+    <p>
+      <a href="{{store.content.cta.link}}">{{store.content.cta.label}}</a>
+    </p>
   </div>
 </template>

@@ -1,6 +1,6 @@
 module.exports = {
     transform: {
-        '^.+\\.ts$': '@swc/jest',
+        '^.+\\.ts$': 'ts-jest',
     },
     setupFilesAfterEnv: ['jest-extended/all'],
     restoreMocks: true,

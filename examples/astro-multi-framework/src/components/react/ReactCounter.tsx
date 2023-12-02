@@ -1,21 +1,18 @@
-import {useStore} from "@nanostores/react";
-import {$counter, delta} from "../state";
+import {useStore} from '@nanostores/react';
+import {homeBannerStore} from '../state';
 
-/** A counter written with Preact */
-export function Counter({children}) {
-    const count = useStore($counter);
-
-    const add = () => delta(1);
-    const subtract = () => delta(-1);
+/** A counter written with React */
+export function Counter(): React.JSX.Element {
+    const {content} = useStore(homeBannerStore);
 
     return (
         <div className="card">
-            <div className="text">{children}</div>
-            <div className="counter">
-                <button onClick={subtract}>-</button>
-                <pre>{count}</pre>
-                <button onClick={add}>+</button>
-            </div>
+            <div style={{align: 'center'}}>React</div>
+            <h1>{content.title}</h1>
+            <div className="text"><strong>{content.subtitle}</strong></div>
+            <p>
+                <a href={content.cta.link}>{content.cta.label}</a>
+            </p>
         </div>
     );
 }

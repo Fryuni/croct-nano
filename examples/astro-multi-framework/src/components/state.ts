@@ -1,27 +1,44 @@
-import {persistentAtom} from "@nanostores/persistent";
-import {type WritableAtom} from "nanostores";
-import {action} from "nanostores";
-import {logger} from "@nanostores/logger";
+import {autoRefresh, croct, type CroctAtom, croctContent} from 'croct-nano';
+import {action, task} from 'nanostores';
 
-export const $counter = persistentAtom<number>('counter', 0, {
-    listen: true,
-    encode: value => value.toString(),
-    decode: value => {
-        const number = parseInt(value, 10);
-        if (!Number.isSafeInteger(number)) {
-            return 0;
-        }
-        return number;
-    }
+croct.plug({
+    appId: import.meta.env.PUBLIC_CROCT_ID,
+    debug: import.meta.env.DEV,
 });
 
-// For Svelte
-export const counter = $counter;
+export const homeBannerStore = croctContent(
+    'home-banner@1',
+    {
+        title: 'I present Croct-Nano',
+        subtitle: 'The most flexible personalization tool ever.',
+        cta: {
+            label: 'Get started',
+            link: 'https://docs.croct.com',
+        },
+    },
+    {
+        attributes: {
+            demoName: 'croct-nano',
+        },
+    },
+);
 
-export const delta = action($counter, 'delta', (store: WritableAtom<number>, value: number) => {
-    store.set(store.get() + value);
-});
+autoRefresh(homeBannerStore);
 
-export const reset = action($counter, 'reset', (store: WritableAtom<number>) => {
-    store.set(0);
+export const setName = action(homeBannerStore, 'setName', (_: CroctAtom, name: string) => {
+    task(
+        () => {
+            if (name === '') {
+                return croct.user
+                    .edit()
+                    .unset('custom.name')
+                    .save();
+            }
+
+            return croct.user
+                .edit()
+                .set('custom.name', name)
+                .save();
+        },
+    );
 });

@@ -1,5 +1,5 @@
 {
-  "name": "",
+  "name": "astro-multi-framework",
   "type": "module",
   "version": "0.0.1",
   "scripts": {
@@ -7,6 +7,7 @@
     "start": "astro dev",
     "build": "astro check && astro build",
     "preview": "astro preview",
+    "validate": "astro check && tsc --noEmit",
     "astro": "astro"
   },
   "dependencies": {
@@ -23,6 +24,7 @@
     "@nanostores/solid": "^0.4.2",
     "@nanostores/vue": "^0.10.0",
     "astro": "^3.6.1",
+    "croct-nano": "../..",
     "nanostores": "^0.9.5",
     "preact": "^10.17.1",
     "react": "^18.2.0",

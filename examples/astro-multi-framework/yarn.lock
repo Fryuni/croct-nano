@@ -459,6 +459,28 @@
     "@babel/helper-validator-identifier" "^7.22.20"
     to-fast-properties "^2.0.0"
 
+"@croct/json@^2.0.1":
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/@croct/json/-/json-2.1.0.tgz#2d6da8b52cab6d1b1f06642a92f751484031d093"
+  integrity sha512-UrWfjNQVlBxN+OVcFwHmkjARMW55MBN04E9KfGac8ac8z1QnFVuiOOFtMWXCk3UwsyRqhsNaFoYLZC+xxqsVjQ==
+
+"@croct/plug@^0.13.3":
+  version "0.13.3"
+  resolved "https://registry.yarnpkg.com/@croct/plug/-/plug-0.13.3.tgz#b683a6e25c37f45833d4c600e8eb7622bacede3c"
+  integrity sha512-XvRKHk88S5ikfDMucnTmiMl1Cy/E8CdfNPloHPSfiKlebOHSo2X788HDdmPtuC3f6Y0RA0q2/saEma8jq4n9ZA==
+  dependencies:
+    "@croct/json" "^2.0.1"
+    "@croct/sdk" "^0.14.0"
+    tslib "^2.2.0"
+
+"@croct/sdk@^0.14.0":
+  version "0.14.0"
+  resolved "https://registry.yarnpkg.com/@croct/sdk/-/sdk-0.14.0.tgz#2a83ebaff924f0eb866682d292215f3ffa66c5b0"
+  integrity sha512-Xuhv1Zz/9joTktEOlRHaVsjGdqKALQcVwJtWMbJuTHpq8IyE1WJZ3tBuNGOXv+YuPIehF5CMfs93NSUUnb5Xyg==
+  dependencies:
+    "@croct/json" "^2.0.1"
+    tslib "^2.5.0"
+
 "@emmetio/abbreviation@^2.3.3":
   version "2.3.3"
   resolved "https://registry.yarnpkg.com/@emmetio/abbreviation/-/abbreviation-2.3.3.tgz#ed2b88fe37b972292d6026c7c540aaf887cecb6e"
@@ -1624,6 +1646,12 @@ cookie@^0.5.0:
   version "0.5.0"
   resolved "https://registry.yarnpkg.com/cookie/-/cookie-0.5.0.tgz#d1f5d71adec6558c58f389987c366aa47e994f8b"
   integrity sha512-YZ3GUyn/o8gfKJlnlX7g7xq4gyO6OSuhGPKaaGssGB2qgDUS0gPgtTvoyZLTt9Ab6dC4hfc9dV5arkvc/OCmrw==
+
+croct-nano@../..:
+  version "0.0.0-dev"
+  dependencies:
+    "@croct/plug" "^0.13.3"
+    nanostores "^0.9.5"
 
 cross-spawn@^7.0.3:
   version "7.0.3"
@@ -4006,7 +4034,7 @@ tsconfck@^3.0.0:
   resolved "https://registry.yarnpkg.com/tsconfck/-/tsconfck-3.0.0.tgz#b469f1ced12973bbec3209a55ed8de3bb04223c9"
   integrity sha512-w3wnsIrJNi7avf4Zb0VjOoodoO0woEqGgZGQm+LHH9przdUI+XDKsWAXwxHA1DaRTjeuZNcregSzr7RaA8zG9A==
 
-tslib@^2.0.3:
+tslib@^2.0.3, tslib@^2.2.0, tslib@^2.5.0:
   version "2.6.2"
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.6.2.tgz#703ac29425e7b37cd6fd456e92404d46d1f3e4ae"
   integrity sha512-AEYxH93jGFPn/a2iVAwW87VuUIkR1FVUKB77NwMF7nBTDkDrrT/Hpt/IrCJ0QXhW27jTBDcf5ZY7w6RiqTMw2Q==

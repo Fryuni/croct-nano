@@ -1,26 +1,20 @@
 /** @jsxImportSource preact */
 
-import {useStore} from "@nanostores/preact";
-import {$counter, delta, reset} from "../state";
+import {useStore} from '@nanostores/preact';
+import {homeBannerStore} from '../state';
 
 /** A counter written with Preact */
-export function PreactCounter({children}) {
-    const count = useStore($counter);
-
-    const diff = Math.floor(Math.pow(10, Math.log10(Math.abs(count)) + 0.223));
-
-    const add = () => delta(diff);
-    const subtract = () => delta(-diff);
+export function PreactCounter(): Element {
+    const {content} = useStore(homeBannerStore);
 
     return (
         <div className="card">
-            <div className="text">{children}</div>
-            <button onClick={reset}>reset</button>
-            <div className="counter">
-                <button onClick={subtract}>-{diff}</button>
-                <pre>{count}</pre>
-                <button onClick={add}>+{diff}</button>
-            </div>
+            <div style="align: center">Preact</div>
+            <h1>{content.title}</h1>
+            <div className="text"><strong>{content.subtitle}</strong></div>
+            <p>
+                <a href={content.cta.link}>{content.cta.label}</a>
+            </p>
         </div>
     );
 }

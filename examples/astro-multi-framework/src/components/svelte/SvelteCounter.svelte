@@ -1,23 +1,13 @@
-<!-- @component
-A counter written with Svelte
--->
+<!-- @component -->
 <script lang="ts">
-	import {counter, delta} from "../state";
-
-	function add() {
-		delta(1);
-	}
-
-	function subtract() {
-		delta(-1);
-	}
+	import {homeBannerStore} from '../state';
 </script>
 
-<div id="solid" class="card">
-	<div class="text"><slot /></div>
-	<div class="counter">
-		<button on:click={subtract}>-</button>
-		<pre>{$counter}</pre>
-		<button on:click={add}>+</button>
-	</div>
+<div class="card" id="solid">
+	<div style="align: center">Svelte</div>
+	<h1>{$homeBannerStore.content.title}</h1>
+	<div className="text"><strong>{$homeBannerStore.content.subtitle}</strong></div>
+	<p>
+		<a href={$homeBannerStore.content.cta.link}>{$homeBannerStore.content.cta.label}</a>
+	</p>
 </div>
