@@ -35,13 +35,14 @@
     "src/**/*.ts"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "build": "rm -rf build && tsc -p tsconfig.build.json",
     "lint": "eslint 'src/**/*.ts' 'test/**/*.ts'",
     "test": "jest -c jest.config.js --coverage",
     "validate": "tsc --noEmit"
   },
   "dependencies": {
     "@croct/plug": "^0.13.3",
+    "@nanostores/persistent": "^0.9.1",
     "nanostores": "^0.9.5"
   },
   "devDependencies": {

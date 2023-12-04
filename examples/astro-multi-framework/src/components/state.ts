@@ -1,4 +1,4 @@
-import {autoRefresh, croct, type CroctAtom, croctContent} from 'croct-nano';
+import {croct, type CroctAtom, croctContent} from 'croct-nano';
 import {action, task} from 'nanostores';
 
 croct.plug({
@@ -23,8 +23,6 @@ export const homeBannerStore = croctContent(
     },
 );
 
-autoRefresh(homeBannerStore);
-
 export const setName = action(homeBannerStore, 'setName', (_: CroctAtom, name: string) => {
     task(
         async () => {
@@ -37,6 +35,10 @@ export const setName = action(homeBannerStore, 'setName', (_: CroctAtom, name: s
             }
 
             await patch.save();
+
+            const interval = setInterval(() => { homeBannerStore.refresh(); }, 1000);
+
+            setTimeout(() => { clearInterval(interval); }, 4000);
         },
     );
 });

@@ -3,8 +3,7 @@
 import {useStore} from '@nanostores/preact';
 import {homeBannerStore} from '../state';
 
-/** A counter written with Preact */
-export function PreactCounter(): Element {
+export function PreactCard(): Element {
     const {content} = useStore(homeBannerStore);
 
     return (

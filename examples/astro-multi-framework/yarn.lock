@@ -1648,7 +1648,7 @@ cookie@^0.5.0:
   integrity sha512-YZ3GUyn/o8gfKJlnlX7g7xq4gyO6OSuhGPKaaGssGB2qgDUS0gPgtTvoyZLTt9Ab6dC4hfc9dV5arkvc/OCmrw==
 
 croct-nano@../..:
-  version "0.0.0-dev"
+  version "0.1.0"
   dependencies:
     "@croct/plug" "^0.13.3"
     nanostores "^0.9.5"

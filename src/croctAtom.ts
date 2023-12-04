@@ -2,6 +2,7 @@ import croct from '@croct/plug';
 import type {FetchOptions, FetchResponse} from '@croct/plug/plug';
 import type {JsonObject} from '@croct/plug/sdk/json';
 import type {SlotContent, VersionedSlotId} from '@croct/plug/slot';
+import {persistentAtom} from '@nanostores/persistent';
 import {action, atom, onMount, task, type WritableAtom} from 'nanostores';
 
 const sign = Symbol('croctStore');
@@ -21,7 +22,12 @@ export function croctContent<P extends JsonObject, I extends VersionedSlotId>(
     fallbackContent: SlotContent<I, P>,
     options?: FetchOptions,
 ): CroctAtom<P, I> {
-    const baseAtom = atom<FetchResponse<I, P>>({content: fallbackContent});
+    const baseAtom = options?.timeout !== undefined
+        ? atom<FetchResponse<I, P>>({content: fallbackContent})
+        : persistentAtom<FetchResponse<I, P>>(`croct-nano|${slotId}`, {content: fallbackContent}, {
+            encode: JSON.stringify,
+            decode: JSON.parse,
+        });
 
     const croctAtom: CroctAtom<P, I> = Object.assign(baseAtom, {
         [sign]: {
