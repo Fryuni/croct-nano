@@ -1,5 +1,5 @@
-import {croct, type CroctAtom, croctContent} from 'croct-nano';
-import {action, task} from 'nanostores';
+import { croct, type CroctAtom, croctContent } from 'croct-nano';
+import { action, task } from 'nanostores';
 
 croct.plug({
     appId: import.meta.env.PUBLIC_CROCT_ID,
@@ -35,10 +35,6 @@ export const setName = action(homeBannerStore, 'setName', (_: CroctAtom, name: s
             }
 
             await patch.save();
-
-            const interval = setInterval(() => { homeBannerStore.refresh(); }, 1000);
-
-            setTimeout(() => { clearInterval(interval); }, 4000);
         },
     );
 });

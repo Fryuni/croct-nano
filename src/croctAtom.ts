@@ -1,21 +1,24 @@
 import croct from '@croct/plug';
-import type {FetchOptions, FetchResponse} from '@croct/plug/plug';
-import type {JsonObject} from '@croct/plug/sdk/json';
-import type {SlotContent, VersionedSlotId} from '@croct/plug/slot';
-import {persistentAtom} from '@nanostores/persistent';
-import {action, atom, onMount, task, type WritableAtom} from 'nanostores';
+import type { FetchOptions, FetchResponse } from '@croct/plug/plug';
+import type { JsonObject } from '@croct/plug/sdk/json';
+import type { TrackingEventType } from '@croct/plug/sdk/tracking';
+import type { SlotContent, VersionedSlotId } from '@croct/plug/slot';
+import { persistentAtom } from '@nanostores/persistent';
+import { action, atom, onMount, task, type WritableAtom } from 'nanostores';
 
 const sign = Symbol('croctStore');
 
 export type CroctAtom<P extends JsonObject = JsonObject, I extends VersionedSlotId = string> =
     WritableAtom<FetchResponse<I, P>>
     & {
-    refresh: (options?: FetchOptions) => Promise<void>,
-    [sign]: {
-        slotId: I,
-        options?: FetchOptions,
-    },
-};
+        refresh: (options?: FetchOptions) => Promise<void>,
+        [sign]: {
+            slotId: I,
+            options?: FetchOptions,
+        },
+    };
+
+const activeAtoms = new Set<CroctAtom<any, any>>();
 
 export function croctContent<P extends JsonObject, I extends VersionedSlotId>(
     slotId: I,
@@ -23,8 +26,8 @@ export function croctContent<P extends JsonObject, I extends VersionedSlotId>(
     options?: FetchOptions,
 ): CroctAtom<P, I> {
     const baseAtom = options?.timeout !== undefined
-        ? atom<FetchResponse<I, P>>({content: fallbackContent})
-        : persistentAtom<FetchResponse<I, P>>(`croct-nano|${slotId}`, {content: fallbackContent}, {
+        ? atom<FetchResponse<I, P>>({ content: fallbackContent })
+        : persistentAtom<FetchResponse<I, P>>(`croct-nano|${slotId}`, { content: fallbackContent }, {
             encode: JSON.stringify,
             decode: JSON.parse,
         });
@@ -50,15 +53,42 @@ export function croctContent<P extends JsonObject, I extends VersionedSlotId>(
 
     croctAtom.refresh();
 
+    onMount(croctAtom, () => {
+        activeAtoms.add(croctAtom);
+
+        return () => {
+            activeAtoms.delete(croctAtom);
+        };
+    })
+
     return croctAtom;
 }
 
-export function autoRefresh(store: CroctAtom<any, any>): void {
-    onMount(store, () => {
-        const interval = setInterval(store.refresh, 2000);
+const refreshEvents: Array<TrackingEventType> = [
+    'userSignedIn',
+    'userSignedUp',
+    'userSignedOut',
+    'userProfileChanged',
+    'tabUrlChanged',
+    'sessionAttributesChanged',
+];
 
-        return () => {
-            clearInterval(interval);
-        };
-    });
+function refreshActive() {
+    for (const croctAtom of activeAtoms) {
+        croctAtom.refresh();
+    }
 }
+
+croct.extend('croct-nano', ({ sdk }) => {
+    sdk.tracker.addListener(({ event }) => {
+        if (!refreshEvents.includes(event.type)) return;
+
+        setTimeout(refreshActive, 500);
+        setTimeout(refreshActive, 2000);
+        setTimeout(refreshActive, 5000);
+    })
+
+    // Plugin has no controllable parts
+    return { enable: () => { }, disable: () => { } };
+})
+
