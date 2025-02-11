@@ -59,12 +59,12 @@ export function croctContent<P extends JsonObject, I extends VersionedSlotId>(
         return () => {
             activeAtoms.delete(croctAtom);
         };
-    })
+    });
 
     return croctAtom;
 }
 
-const refreshEvents: Array<TrackingEventType> = [
+const refreshEvents: TrackingEventType[] = [
     'userSignedIn',
     'userSignedUp',
     'userSignedOut',
@@ -86,9 +86,8 @@ croct.extend('croct-nano', ({ sdk }) => {
         setTimeout(refreshActive, 500);
         setTimeout(refreshActive, 2000);
         setTimeout(refreshActive, 5000);
-    })
+    });
 
     // Plugin has no controllable parts
     return { enable: () => { }, disable: () => { } };
-})
-
+});
