@@ -30,13 +30,11 @@ env:
 jobs:
   # Build primes out Turbo build cache and pnpm cache
   build:
-    name: 'Build - Node ${{ matrix.NODE_VERSION }}'
+    name: 'Build - Node ${{ env.NODE_VERSION }}'
     runs-on: ubuntu-latest
     timeout-minutes: 3
-    strategy:
-      matrix:
-        NODE_VERSION: [20, 22]
-      fail-fast: true
+    env:
+      NODE_VERSION: 22
     steps:
       # # Disable crlf so all OS can share the same Turbo cache
       # # https://github.com/actions/checkout/issues/135
@@ -50,17 +48,17 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .turbo
-          key: ${{ runner.os }}-${{ matrix.NODE_VERSION }}-turbo-${{ github.sha }}
+          key: ${{ runner.os }}-${{ env.NODE_VERSION }}-turbo-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-${{ matrix.NODE_VERSION }}-turbo-
+            ${{ runner.os }}-${{ env.NODE_VERSION }}-turbo-
 
       - name: Setup PNPM
         uses: pnpm/action-setup@v4
 
-      - name: Setup node@${{ matrix.NODE_VERSION }}
+      - name: Setup node@${{ env.NODE_VERSION }}
         uses: actions/setup-node@main
         with:
-          node-version: ${{ matrix.NODE_VERSION }}
+          node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
 
       - name: Install dependencies
@@ -98,16 +96,12 @@ jobs:
           pnpm run format --check
 
   test:
-    name: 'Test: Node ${{ matrix.NODE_VERSION }}'
+    name: 'Test: Node ${{ env.NODE_VERSION }}'
     runs-on: ubuntu-latest
     timeout-minutes: 25
     needs: build
-    strategy:
-      matrix:
-        NODE_VERSION: [20, 22]
-      fail-fast: false
     env:
-      NODE_VERSION: ${{ matrix.NODE_VERSION }}
+      NODE_VERSION: 22
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -116,17 +110,17 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .turbo
-          key: ${{ runner.os }}-${{ matrix.NODE_VERSION }}-turbo-${{ github.sha }}
+          key: ${{ runner.os }}-${{ env.NODE_VERSION }}-turbo-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-${{ matrix.NODE_VERSION }}-turbo-
+            ${{ runner.os }}-${{ env.NODE_VERSION }}-turbo-
 
       - name: Setup PNPM
         uses: pnpm/action-setup@v4
 
-      - name: Setup node@${{ matrix.NODE_VERSION }}
+      - name: Setup node@${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4.2.0
         with:
-          node-version: ${{ matrix.NODE_VERSION }}
+          node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
 
       - name: Install dependencies
