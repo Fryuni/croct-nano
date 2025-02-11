@@ -24,17 +24,15 @@ export const homeBannerStore = croctContent(
 );
 
 export const setName = action(homeBannerStore, 'setName', (_: CroctAtom, name: string) => {
-    task(
-        async () => {
-            const patch = croct.user.edit();
+    task(async () => {
+        const patch = croct.user.edit();
 
-            if (name === '') {
-                patch.unset('custom.name');
-            } else {
-                patch.set('custom.name', name);
-            }
+        if (name === '') {
+            patch.unset('custom.name');
+        } else {
+            patch.set('custom.name', name);
+        }
 
-            await patch.save();
-        },
-    );
+        await patch.save();
+    });
 });

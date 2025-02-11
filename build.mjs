@@ -8,8 +8,5 @@ await esbuild.build({
     platform: 'neutral',
     format: 'esm',
     sourcemap: 'external',
-    external: [
-        'nanostores',
-        '@croct/plug',
-    ],
+    external: ['nanostores', '@croct/plug'],
 });

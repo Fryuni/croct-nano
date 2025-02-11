@@ -1,49 +1,49 @@
 ---
 import '../styles/global.css';
 
-import {ReactCard} from '../components/react/Card';
-import {PreactCard} from '../components/preact/Card';
-import {SolidCard} from '../components/solid/Card';
+import { ReactCard } from '../components/react/Card';
+import { PreactCard } from '../components/preact/Card';
+import { SolidCard } from '../components/solid/Card';
 import SvelteCard from '../components/svelte/Card.svelte';
 import VueCard from '../components/vue/Card.vue';
 ---
 
 <html lang="en">
-<head>
-    <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width"/>
-    <meta name="generator" content={Astro.generator}/>
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
-</head>
-<body>
-<header>
-    <h1>Croct-Omni Demo</h1>
-    <label>User's Name:</label>
-    <form id="nameForm" action="#">
-        <input id="userName" type="text"/>
-    </form>
-    <script>
-        import {setName} from '../components/state';
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width" />
+        <meta name="generator" content={Astro.generator} />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    </head>
+    <body>
+        <header>
+            <h1>Croct-Omni Demo</h1>
+            <label>User's Name:</label>
+            <form id="nameForm" action="#">
+                <input id="userName" type="text" />
+            </form>
+            <script>
+                import { setName } from '../components/state';
 
-        const form = document.getElementById('nameForm') as HTMLFormElement;
-        form.addEventListener('submit', (event) => {
-            event.preventDefault();
-            const input = document.getElementById('userName') as HTMLInputElement;
+                const form = document.getElementById('nameForm') as HTMLFormElement;
+                form.addEventListener('submit', event => {
+                    event.preventDefault();
+                    const input = document.getElementById('userName') as HTMLInputElement;
 
-            const userName = input.value;
-            input.value = '';
+                    const userName = input.value;
+                    input.value = '';
 
-            setName(userName);
-        });
-    </script>
-</header>
-<hr/>
-<main class="grid">
-    <ReactCard client:only="react" />
-    <PreactCard client:only="preact" />
-    <SolidCard client:only="solid-js" />
-    <VueCard client:only="vue" />
-    <SvelteCard client:only="svelte" />
-</main>
-</body>
+                    setName(userName);
+                });
+            </script>
+        </header>
+        <hr />
+        <main class="grid">
+            <ReactCard client:only="react" />
+            <PreactCard client:only="preact" />
+            <SolidCard client:only="solid-js" />
+            <VueCard client:only="vue" />
+            <SvelteCard client:only="svelte" />
+        </main>
+    </body>
 </html>

@@ -21,6 +21,7 @@
 </p>
 
 ## Installation
+
 We recommend using [YARN](https://yarnpkg.com) to install the package:
 
 ```sh
@@ -34,14 +35,15 @@ yarn add croct-nano
 ## Basic usage
 
 ```typescript
-import {Example} from 'croct-nano';
+import { Example } from 'croct-nano';
 
 const example = new Example();
 example.displayBasicUsage();
 ```
 
 ## Contributing
-Contributions to the package are always welcome! 
+
+Contributions to the package are always welcome!
 
 - Report any bugs or issues on the [issue tracker](https://github.com/Fryuni/croct-nano/issues).
 - For major changes, please [open an issue](https://github.com/Fryuni/croct-nano/issues) first to discuss what you would like to change.

@@ -1,70 +1,34 @@
 {
-  "name": "croct-nano",
-  "version": "0.1.0",
-  "description": "A NanoStore for Croct interactions.",
-  "keywords": [
-    "croct",
-    "personalization",
-    "typescript"
-  ],
-  "homepage": "https://github.com/Fryuni/croct-nano",
-  "bugs": {
-    "url": "https://github.com/Fryuni/croct-nano/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Fryuni/croct-nano.git"
-  },
-  "license": "MIT",
-  "author": {
-    "name": "Luiz Ferraz",
-    "email": "luiz+lib-croct-nano@lferraz.com",
-    "url": "https://github.com/Fryuni/croct-nano"
-  },
-  "exports": {
-    ".": {
-      "default": "./build/index.js",
-      "import": "./build/index.js",
-      "types": "./build/index.d.ts"
-    }
-  },
-  "files": [
-    "README.md",
-    "build/**/*.js",
-    "build/**/*.ts",
-    "src/**/*.ts"
-  ],
-  "scripts": {
-    "build": "rm -rf build && tsc -p tsconfig.build.json && node build.mjs",
-    "lint": "eslint 'src/**/*.ts' 'test/**/*.ts'",
-    "test": "jest -c jest.config.js --coverage",
-    "validate": "tsc --noEmit"
-  },
-  "dependencies": {
-    "@croct/plug": "^0.16.5",
-    "@nanostores/persistent": "^0.9.1",
-    "nanostores": "^0.9.5"
-  },
-  "devDependencies": {
-    "@croct/eslint-plugin": "^0.7.0",
-    "@size-limit/esbuild": "^11.0.0",
-    "@size-limit/esbuild-why": "^11.0.0",
-    "@size-limit/file": "^11.0.0",
-    "@types/jest": "^29.0.0",
-    "@typescript-eslint/parser": "^6.0.0",
-    "esbuild": "^0.20.2",
-    "eslint": "^8.22",
-    "jest": "^29.0.0",
-    "jest-extended": "^4.0.0",
-    "size-limit": "^11.0.0",
-    "ts-jest": "^29.1.1",
-    "typescript": "^5.0.0"
-  },
-  "peerDependencies": {
-    "@nanostores/preact": "^0.5.0",
-    "@nanostores/react": "^0.7.1",
-    "@nanostores/solid": "^0.4.2",
-    "@nanostores/vue": "^0.10.0"
-  },
-  "packageManager": "pnpm@9.15.4+sha512.b2dc20e2fc72b3e18848459b37359a32064663e5627a51e4c74b2c29dd8e8e0491483c3abb40789cfd578bf362fb6ba8261b05f0387d76792ed6e23ea3b1b6a0"
+    "name": "root",
+    "version": "0.0.0",
+    "private": true,
+    "type": "module",
+    "license": "MIT",
+    "author": {
+        "name": "Luiz Ferraz",
+        "email": "luiz+lib-croct-nano@lferraz.com",
+        "url": "https://github.com/Fryuni/croct-nano"
+    },
+    "scripts": {
+        "build": "turbo run --filter croct-nanostores build",
+        "dev": "turbo run --filter croct-nanostores dev",
+        "build:examples": "turbo run --filter '@example/*' build",
+        "docs:build": "turbo run --filter docs build",
+        "docs:dev": "turbo run --filter docs dev",
+        "format": "prettier -w \"**/*\" --ignore-unknown --cache",
+        "test": "turbo run --concurrency=1 --filter croct-nanostores test",
+        "test:e2e": "turbo run --concurrency=1 --filter croct-nanostores test:e2e",
+        "version": "changeset version && pnpm install && pnpm format",
+        "cut-release": "pnpm build && changeset publish"
+    },
+    "dependencies": {
+        "@changesets/changelog-github": "^0.5.0",
+        "@changesets/cli": "^2.27.12",
+        "husky": "^9.1.7",
+        "lint-staged": "^15.4.3",
+        "prettier": "^3.4.2",
+        "prettier-plugin-astro": "^0.14.1",
+        "turbo": "^2.4.0"
+    },
+    "packageManager": "pnpm@9.15.4+sha512.b2dc20e2fc72b3e18848459b37359a32064663e5627a51e4c74b2c29dd8e8e0491483c3abb40789cfd578bf362fb6ba8261b05f0387d76792ed6e23ea3b1b6a0"
 }

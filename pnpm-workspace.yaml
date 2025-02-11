@@ -1,0 +1,7 @@
+packages:
+    - turbo
+    - docs
+    - package
+    - examples/*
+    - package/*/tests/fixture/*
+    - package/*/e2e/fixture/*

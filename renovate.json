@@ -1,5 +1,3 @@
 {
-  "extends": [
-    "github>croct-tech/renovate-presets:js"
-  ]
+    "extends": ["github>croct-tech/renovate-presets:js"]
 }
