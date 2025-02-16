@@ -1,0 +1,9 @@
+{
+  "mode": "pre",
+  "tag": "beta",
+  "initialVersions": {
+    "@example/astro-multi-framework": "0.0.1",
+    "croct-nanostores": "0.0.0"
+  },
+  "changesets": []
+}
