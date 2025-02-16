@@ -1,6 +1,6 @@
 module.exports = [
     {
-        path: 'src/index.ts',
+        path: 'dist/index.mjs',
         import: '{ croctContent }',
         ignore: ['@croct/plug'],
     },
