@@ -43,3 +43,4 @@ jobs:
                   script: pnpm exec size-limit --json
                   skip_step: install
                   directory: package/
+                  package_manager: pnpm
