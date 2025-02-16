@@ -1,6 +1,6 @@
 {
     "name": "croct-nanostores",
-    "version": "0.1.0-beta.0",
+    "version": "0.1.0-beta.1",
     "description": "Nanostores bindings for Croct content.",
     "keywords": [
         "nanostores",
@@ -44,6 +44,7 @@
         "build": "tsup",
         "dev": "tsup --watch",
         "prepublish": "pnpm run build && cp ../README.md .",
+        "size": "rm esbuild-why*.html && pnpm size-limit",
         "test": "vitest run --coverage",
         "test:dev": "vitest --coverage.enabled=true"
     },

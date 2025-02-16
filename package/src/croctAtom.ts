@@ -6,10 +6,15 @@ import type { SlotContent, VersionedSlotId } from '@croct/plug/slot';
 import { persistentAtom } from '@nanostores/persistent';
 import { atom, onMount, task, type WritableAtom } from 'nanostores';
 
+type State<I extends VersionedSlotId = string, P extends JsonObject = JsonObject> = Pick<
+    FetchResponse<I, P>,
+    'content'
+>;
+
 export type CroctAtom<
     P extends JsonObject = JsonObject,
     I extends VersionedSlotId = string,
-> = WritableAtom<FetchResponse<I, P>> & {
+> = WritableAtom<State<I, P>> & {
     refresh: () => Promise<void>;
 };
 
@@ -22,8 +27,8 @@ export function croctContent<P extends JsonObject, I extends VersionedSlotId>(
 ): CroctAtom<P, I> {
     const baseAtom =
         options?.timeout !== undefined
-            ? atom<FetchResponse<I, P>>({ content: fallbackContent })
-            : persistentAtom<FetchResponse<I, P>>(
+            ? atom<State<I, P>>({ content: fallbackContent })
+            : persistentAtom<State<I, P>>(
                   `croct-nano|${slotId}`,
                   { content: fallbackContent },
                   {

@@ -5,5 +5,5 @@
         "@example/astro-multi-framework": "0.0.1",
         "croct-nanostores": "0.0.0"
     },
-    "changesets": ["lemon-cooks-film"]
+    "changesets": ["green-tables-breathe", "lemon-cooks-film"]
 }
