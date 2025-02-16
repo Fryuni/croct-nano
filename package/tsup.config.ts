@@ -11,7 +11,7 @@ const devDependencies = [...Object.keys(packageJson.devDependencies || {})];
 export default defineConfig({
     entry: ['src/index.ts'],
     format: ['esm'],
-    target: 'node18',
+    target: 'es2020',
     bundle: true,
     dts: {
         entry: ['src/index.ts'],
