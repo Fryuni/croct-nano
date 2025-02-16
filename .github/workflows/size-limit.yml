@@ -37,9 +37,9 @@ jobs:
             - name: Install dependencies
               run: pnpm install
 
-            - uses: andresz1/size-limit-action@v1
+            - uses: andresz1/size-limit-action@master
               with:
                   github_token: ${{ secrets.GITHUB_TOKEN }}
+                  script: pnpm exec size-limit --json
                   skip_step: install
                   directory: package/
-                  package_manager: pnpm
