@@ -25,7 +25,7 @@
 ## Installation
 
 ```sh
-npm/yarn/pnpm install croct-nano
+npm/yarn/pnpm install croct-nanostores
 ```
 
 ## Basic usage
