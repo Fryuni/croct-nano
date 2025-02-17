@@ -27,8 +27,8 @@ export default defineConfig({
                     slug: 'getting-started',
                 },
                 {
-                    label: 'Examples',
-                    slug: 'examples',
+                    label: 'Demo',
+                    slug: 'demo',
                 },
             ],
         }),
@@ -51,5 +51,8 @@ export default defineConfig({
             // 	access: 'secret',
             // }),
         },
+    },
+    redirects: {
+        '/examples': '/demo',
     },
 });
