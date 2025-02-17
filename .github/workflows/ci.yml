@@ -1,192 +1,192 @@
 name: CI
 
 on:
-  workflow_dispatch:
-  push:
-    branches:
-      - main
-  merge_group:
-  pull_request:
-    paths-ignore:
-      - '**/*.md'
-      - '.github/ISSUE_TEMPLATE/**'
+    workflow_dispatch:
+    push:
+        branches:
+            - main
+    merge_group:
+    pull_request:
+        paths-ignore:
+            - '**/*.md'
+            - '.github/ISSUE_TEMPLATE/**'
 
 # Automatically cancel older in-progress jobs on the same branch
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request_target' && github.head_ref || github.ref }}
-  cancel-in-progress: true
+    group: ${{ github.workflow }}-${{ github.event_name == 'pull_request_target' && github.head_ref || github.ref }}
+    cancel-in-progress: true
 
 defaults:
-  run:
-    shell: bash
+    run:
+        shell: bash
 
 env:
-  FORCE_COLOR: true
-  ASTRO_TELEMETRY_DISABLED: true
-  # 7 GiB by default on GitHub, setting to 6 GiB
-  # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
-  NODE_OPTIONS: --max-old-space-size=6144
+    FORCE_COLOR: true
+    ASTRO_TELEMETRY_DISABLED: true
+    # 7 GiB by default on GitHub, setting to 6 GiB
+    # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
+    NODE_OPTIONS: --max-old-space-size=6144
 
 jobs:
-  # Build primes out Turbo build cache and pnpm cache
-  build:
-    name: 'Build - Node ${{ env.NODE_VERSION }}'
-    runs-on: ubuntu-latest
-    timeout-minutes: 3
-    env:
-      NODE_VERSION: 22
-    steps:
-      # # Disable crlf so all OS can share the same Turbo cache
-      # # https://github.com/actions/checkout/issues/135
-      # - name: Disable git crlf
-      #   run: git config --global core.autocrlf false
+    # Build primes out Turbo build cache and pnpm cache
+    build:
+        name: 'Build - Node ${{ env.NODE_VERSION }}'
+        runs-on: ubuntu-latest
+        timeout-minutes: 3
+        env:
+            NODE_VERSION: 22
+        steps:
+            # # Disable crlf so all OS can share the same Turbo cache
+            # # https://github.com/actions/checkout/issues/135
+            # - name: Disable git crlf
+            #   run: git config --global core.autocrlf false
 
-      - name: Checkout
-        uses: actions/checkout@v4
+            - name: Checkout
+              uses: actions/checkout@v4
 
-      - name: Cache turbo build setup
-        uses: actions/cache@v4
-        with:
-          path: .turbo
-          key: ${{ runner.os }}-${{ env.NODE_VERSION }}-turbo-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-${{ env.NODE_VERSION }}-turbo-
+            - name: Cache turbo build setup
+              uses: actions/cache@v4
+              with:
+                  path: .turbo
+                  key: ${{ runner.os }}-${{ env.NODE_VERSION }}-turbo-${{ github.sha }}
+                  restore-keys: |
+                      ${{ runner.os }}-${{ env.NODE_VERSION }}-turbo-
 
-      - name: Setup PNPM
-        uses: pnpm/action-setup@v4
+            - name: Setup PNPM
+              uses: pnpm/action-setup@v4
 
-      - name: Setup node@${{ env.NODE_VERSION }}
-        uses: actions/setup-node@main
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
+            - name: Setup node@${{ env.NODE_VERSION }}
+              uses: actions/setup-node@main
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+                  cache: 'pnpm'
 
-      - name: Install dependencies
-        run: pnpm install
+            - name: Install dependencies
+              run: pnpm install
 
-      - name: Build Packages
-        run: pnpm run build
+            - name: Build Packages
+              run: pnpm run build
 
-      - name: Build Examples
-        run: pnpm run build:examples
+            - name: Build Examples
+              run: pnpm run build:examples
 
-  lint:
-    name: Lint
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    needs: build
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+    lint:
+        name: Lint
+        runs-on: ubuntu-latest
+        timeout-minutes: 5
+        needs: build
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
 
-      - name: Setup PNPM
-        uses: pnpm/action-setup@v4
+            - name: Setup PNPM
+              uses: pnpm/action-setup@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4.2.0
-        with:
-          node-version: 22
-          cache: 'pnpm'
+            - name: Setup Node
+              uses: actions/setup-node@v4.2.0
+              with:
+                  node-version: 22
+                  cache: 'pnpm'
 
-      - name: Install dependencies
-        run: pnpm install
+            - name: Install dependencies
+              run: pnpm install
 
-      - name: Format Check
-        run: |
-          pnpm run format --check
+            - name: Format Check
+              run: |
+                  pnpm run format --check
 
-  test:
-    name: 'Test: Node ${{ env.NODE_VERSION }}'
-    runs-on: ubuntu-latest
-    timeout-minutes: 25
-    needs: build
-    env:
-      NODE_VERSION: 22
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+    test:
+        name: 'Test: Node ${{ env.NODE_VERSION }}'
+        runs-on: ubuntu-latest
+        timeout-minutes: 25
+        needs: build
+        env:
+            NODE_VERSION: 22
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
 
-      - name: Cache turbo build setup
-        uses: actions/cache@v4
-        with:
-          path: .turbo
-          key: ${{ runner.os }}-${{ env.NODE_VERSION }}-turbo-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-${{ env.NODE_VERSION }}-turbo-
+            - name: Cache turbo build setup
+              uses: actions/cache@v4
+              with:
+                  path: .turbo
+                  key: ${{ runner.os }}-${{ env.NODE_VERSION }}-turbo-${{ github.sha }}
+                  restore-keys: |
+                      ${{ runner.os }}-${{ env.NODE_VERSION }}-turbo-
 
-      - name: Setup PNPM
-        uses: pnpm/action-setup@v4
+            - name: Setup PNPM
+              uses: pnpm/action-setup@v4
 
-      - name: Setup node@${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v4.2.0
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
+            - name: Setup node@${{ env.NODE_VERSION }}
+              uses: actions/setup-node@v4.2.0
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+                  cache: 'pnpm'
 
-      - name: Install dependencies
-        run: pnpm install
+            - name: Install dependencies
+              run: pnpm install
 
-      - name: Build Packages
-        run: pnpm run build
+            - name: Build Packages
+              run: pnpm run build
 
-      - name: Test
-        run: pnpm run test
+            - name: Test
+              run: pnpm run test
 
-  test-e2e:
-    name: E2E test
-    runs-on: ubuntu-latest
-    timeout-minutes: 25
-    needs: build
-    env:
-      NODE_VERSION: 22
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+    test-e2e:
+        name: E2E test
+        runs-on: ubuntu-latest
+        timeout-minutes: 25
+        needs: build
+        env:
+            NODE_VERSION: 22
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
 
-      - name: Cache turbo build setup
-        uses: actions/cache@v4
-        with:
-          path: .turbo
-          key: ${{ runner.os }}-${{ env.NODE_VERSION }}-turbo-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-${{ env.NODE_VERSION }}-turbo-
+            - name: Cache turbo build setup
+              uses: actions/cache@v4
+              with:
+                  path: .turbo
+                  key: ${{ runner.os }}-${{ env.NODE_VERSION }}-turbo-${{ github.sha }}
+                  restore-keys: |
+                      ${{ runner.os }}-${{ env.NODE_VERSION }}-turbo-
 
-      - name: Setup PNPM
-        uses: pnpm/action-setup@v4
+            - name: Setup PNPM
+              uses: pnpm/action-setup@v4
 
-      - name: Setup node@${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v4.2.0
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
+            - name: Setup node@${{ env.NODE_VERSION }}
+              uses: actions/setup-node@v4.2.0
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+                  cache: 'pnpm'
 
-      - name: Install dependencies
-        run: pnpm install
+            - name: Install dependencies
+              run: pnpm install
 
-      - name: Install Playwright browsers
-        run: pnpm exec playwright install --with-deps
+            - name: Install Playwright browsers
+              run: pnpm exec playwright install --with-deps
 
-      - name: Test
-        run: pnpm test:e2e
+            - name: Test
+              run: pnpm test:e2e
 
-  duplicated-packages:
-    name: Check for duplicated dependencies
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+    duplicated-packages:
+        name: Check for duplicated dependencies
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
 
-      - name: Setup PNPM
-        uses: pnpm/action-setup@v4
+            - name: Setup PNPM
+              uses: pnpm/action-setup@v4
 
-      - name: Setup node
-        uses: actions/setup-node@v4.2.0
-        with:
-          node-version: 22
-          cache: 'pnpm'
+            - name: Setup node
+              uses: actions/setup-node@v4.2.0
+              with:
+                  node-version: 22
+                  cache: 'pnpm'
 
-      - name: Install dependencies
-        run: pnpm install
+            - name: Install dependencies
+              run: pnpm install
 
-      - name: Check duplicated dependencies
-        run: pnpm dedupe --prefer-offline --check
+            - name: Check duplicated dependencies
+              run: pnpm dedupe --prefer-offline --check

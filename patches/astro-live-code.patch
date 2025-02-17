@@ -1,0 +1,81 @@
+diff --git a/src/lib/remark.js b/src/lib/remark.js
+index e34c4a2fe5ebcb440f8252e2bd6efeeb1073189a..1e9fcbcacc76f545870a68ea98b8c9b81a11c634 100644
+--- a/src/lib/remark.js
++++ b/src/lib/remark.js
+@@ -18,19 +18,10 @@ export default function examples(options) {
+       const childIndex = parent.children.indexOf(node)
+ 
+       if (node.meta && node.meta.split(' ').includes('live')) {
+-        const isDiff = node.lang === 'diff'
+         const lang = getLang(node)
+         const meta = node.meta
+ 
+-        const src = isDiff
+-          ? node.value
+-              ?.split('\n')
+-              // filter out lines with leading -
+-              .filter((line) => !line.match(/^[-]/))
+-              // remove leading + from lines
+-              .map((line) => line.replace(/^[+]/, ''))
+-              .join('\n')
+-          : node.value
++        const src = getSrc(node)
+ 
+         const i = examples.length
+ 
+@@ -46,7 +37,9 @@ export default function examples(options) {
+           `${parentId.replace(
+             path.extname(parentId),
+             '',
+-          )}-${exampleComponentName}.${lang}`,
++          )}-${getMetaProp(node, 'exampleName') || exampleComponentName}${
++            getMetaProp(node, 'exampleSuffix')
++          }.${lang}`,
+         )
+ 
+         const layout = toPOSIX(getLayoutPathFromMeta(meta) || options.layout)
+@@ -372,6 +365,44 @@ function getLang(node) {
+   return node.lang
+ }
+ 
++function getSrc(node) {
++  const src = [node.lang === 'diff'
++    ? node.value
++        ?.split('\n')
++        // filter out lines with leading -
++        .filter((line) => !line.match(/^[-]/))
++        // remove leading + from lines
++        .map((line) => line.replace(/^[+]/, ''))
++        .join('\n')
++    : node.value]
++
++  const jsxImport = getMetaProp(node, 'jsxImport')
++  if (jsxImport) src.unshift(`/** @jsxImportSource ${jsxImport} */`);
++
++  return src.join('\n')
++}
++
++function getMetaProp(node, propName) {
++  const propKey = `${propName}=`
++  const namePropIdx = node.meta.indexOf(propKey);
++  if (namePropIdx < 0) return;
++  const rest = node.meta.slice(namePropIdx + propKey.length);
++  if (rest[0] === '"') {
++    try {
++      return JSON.parse(rest);
++    } catch (e) {
++      if (e.name !== 'SyntaxError') throw e;
++
++      const [, delimiter] = e.message.match(/at position (\d+) \(/) || [];
++      if (!delimiter) throw e;
++
++      return JSON.parse(rest.slice(0, +delimiter));
++    }
++  }
++
++  return rest.substring(0, rest.includes(' ') ? rest.indexOf(' ') : rest.length+1);
++}
++
+ function parsePropsFromString(string) {
+   const regex = /props={{(.*?)}}/g
+   const matches = []

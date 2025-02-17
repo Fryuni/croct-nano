@@ -1,41 +1,41 @@
 {
-    "name": "@example/astro-multi-framework",
+    "name": "docs",
     "type": "module",
-    "private": true,
     "version": "0.0.1",
+    "private": true,
     "scripts": {
         "dev": "astro dev",
         "start": "astro dev",
-        "build": "astro check && astro build",
+        "build": "astro build",
         "preview": "astro preview",
-        "validate": "astro check && tsc --noEmit",
         "astro": "astro"
     },
     "dependencies": {
-        "@astrojs/check": "^0.9.4",
         "@astrojs/preact": "^4.0.4",
         "@astrojs/react": "^4.2.0",
         "@astrojs/solid-js": "^5.0.4",
+        "@astrojs/starlight": "^0.32.0",
         "@astrojs/svelte": "^7.0.4",
         "@astrojs/vue": "^5.0.6",
-        "@nanostores/logger": "^0.4.0",
+        "@croct/plug": "^0.16.5",
         "@nanostores/persistent": "^0.10.2",
         "@nanostores/preact": "^0.5.0",
         "@nanostores/react": "^0.8.4",
         "@nanostores/solid": "^0.5.0",
         "@nanostores/vue": "^0.11.0",
+        "@types/react": "^19.0.9",
+        "@types/react-dom": "^19.0.3",
         "astro": "^5.3.0",
-        "croct-nano": "../..",
+        "astro-live-code": "^0.0.5",
+        "croct-nanostores": "workspace:",
         "nanostores": "^0.11.4",
         "preact": "^10.26.0",
         "react": "^19.0.0",
         "react-dom": "^19.0.0",
-        "solid-js": "^1.7.11",
+        "sharp": "^0.33.5",
+        "solid-js": "^1.9.4",
         "svelte": "^5.20.1",
         "typescript": "^5.7.3",
-        "vue": "^3.3.4"
-    },
-    "devDependencies": {
-        "@types/react": "^19.0.9"
+        "vue": "^3.5.13"
     }
 }

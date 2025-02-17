@@ -1,0 +1,20 @@
+[
+    {
+        "name": "Full with all deps",
+        "path": "dist/index.js",
+        "import": "{ croctContent }",
+        "ignore": []
+    },
+    {
+        "name": "Already using Croct",
+        "path": "dist/index.js",
+        "import": "{ croctContent }",
+        "ignore": ["@croct/plug"]
+    },
+    {
+        "name": "Already using Nanostores",
+        "path": "dist/index.js",
+        "import": "{ croctContent }",
+        "ignore": ["@croct/plug", "nanostores", "@nanostores/persistent"]
+    }
+]
