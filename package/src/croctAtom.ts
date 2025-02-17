@@ -117,8 +117,12 @@ export function register(): void {
 
                 refreshTimer = setTimeout(() => {
                     refreshActive();
-                    refreshTimer = null;
-                }, 2500);
+
+                    refreshTimer = setTimeout(() => {
+                        refreshActive();
+                        refreshTimer = null;
+                    }, 1500);
+                }, 1000);
             }, 500);
         });
 
