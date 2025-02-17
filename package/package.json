@@ -1,6 +1,7 @@
 {
     "name": "croct-nanostores",
-    "version": "0.1.0-beta.1",
+    "version": "0.1.0-beta.2",
+    "type": "module",
     "description": "Nanostores bindings for Croct content.",
     "keywords": [
         "nanostores",
@@ -30,9 +31,9 @@
     },
     "exports": {
         ".": {
-            "import": "./build/index.js",
-            "types": "./build/index.d.ts",
-            "default": "./build/index.js"
+            "import": "./dist/index.js",
+            "types": "./dist/index.d.ts",
+            "default": "./dist/index.js"
         }
     },
     "files": [

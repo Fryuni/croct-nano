@@ -1,4 +1,6 @@
-import croct from '@croct/plug';
-import { type CroctAtom, croctContent } from './croctAtom';
+import { croct } from './plug.js';
+import { type CroctAtom, croctContent, register } from './croctAtom.js';
 
-export { croct, croctContent, CroctAtom };
+register();
+
+export { croct, croctContent, type CroctAtom };
