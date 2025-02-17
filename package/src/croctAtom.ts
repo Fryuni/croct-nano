@@ -28,13 +28,13 @@ export function croctContent<P extends JsonObject, const I extends VersionedSlot
         options?.timeout !== undefined
             ? atom<State<I, P>>({ stage: 'initial', content: fallbackContent as P })
             : persistentAtom<State<I, P>>(
-                  `croct-nano|${slotId}`,
-                  { stage: 'initial', content: fallbackContent as P },
-                  {
-                      encode: JSON.stringify,
-                      decode: JSON.parse,
-                  },
-              );
+                `croct-nano|${slotId}`,
+                { stage: 'initial', content: fallbackContent as P },
+                {
+                    encode: JSON.stringify,
+                    decode: JSON.parse,
+                },
+            );
 
     const croctAtom: CroctAtom<P, I> = Object.assign(baseAtom, {
         refresh: () =>
@@ -46,7 +46,9 @@ export function croctContent<P extends JsonObject, const I extends VersionedSlot
                 } catch (error) {
                     console.error(`Error while refreshing Croct Atom for "${slotId}":\n`, error);
 
-                    croctAtom.set({ stage: 'fallback', content: fallbackContent as P });
+                    if (croctAtom.value?.stage !== 'loaded') {
+                        croctAtom.set({ stage: 'fallback', content: fallbackContent as P });
+                    }
                 }
             }),
     });
