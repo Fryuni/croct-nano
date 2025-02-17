@@ -1,0 +1,152 @@
+---
+title: Examples
+---
+
+Thanks to the ultra-flexible nature of Nanostores, you can use Croct's personalized store from multiple frameworks, any framework that has a [matching Nanostore connector library](https://github.com/nanostores).
+
+Considering a single common store exported from a TS file:
+
+```ts title="src/stores/croct.ts"
+import { croct, croctContent } from 'croct-nanostores';
+
+export const exampleSlot = croctContent('example@1', {
+    _component: 'example-component@1',
+    title: 'Default static content',
+    body: 'This is defined inline in the store.',
+});
+
+export const setInterests = (interests: string) => {
+    croct.user
+        .edit()
+        .set(
+            'interests',
+            interests.split(',').map(i => i.trim()),
+        )
+        .save();
+};
+```
+
+Components from multiple frameworks can use that store and all of them will be updated automatically whenever data is tracked from anywhere, be it one of the frameworks or from plain JS.
+
+Here are some examples using the above store in a few frameworks, they are all running live in the space above each code block:
+
+### React
+
+```tsx live title="src/components/react/Example.tsx" exampleSuffix=.react jsxImport=react props={{ "client:only": "react" }}
+import { useStore } from '@nanostores/react';
+import { exampleSlot, setInterests } from '../../stores/croct';
+
+export default () => {
+    const example = useStore(exampleSlot);
+
+    return (
+        <>
+            <h4>On React: {example.content.title}</h4>
+            <p>{example.content.body}</p>
+            <form
+                onSubmit={e => {
+                    const data = new FormData(e.target);
+                    setInterests(data.get('interests'));
+                    e.preventDefault();
+                }}
+            >
+                <label>My interests: </label>
+                <input name="interests" type="text" />{' '}
+                <button type="submit">Update interest</button>
+            </form>
+        </>
+    );
+};
+```
+
+### Preact
+
+```tsx live title="src/components/Example.tsx" exampleSuffix=.preact jsxImport=preact props={{ "client:only": "preact" }}
+import { useStore } from '@nanostores/preact';
+import { exampleSlot } from '../../stores/croct';
+
+export default () => {
+    const example = useStore(exampleSlot);
+
+    return (
+        <>
+            <h4>On Preact: {example.content.title}</h4>
+            <p>{example.content.body}</p>
+            <form
+                onSubmit={e => {
+                    const data = new FormData(e.target);
+                    setInterests(data.get('interests'));
+                    e.preventDefault();
+                }}
+            >
+                <label>My interests: </label>
+                <input name="interests" type="text" />{' '}
+                <button type="submit">Update interest</button>
+            </form>
+        </>
+    );
+};
+```
+
+### Solid-JS
+
+```tsx live title="src/components/Example.tsx" exampleSuffix=.solid jsxImport=solid props={{ "client:only": "solid" }}
+import { useStore } from '@nanostores/solid';
+import { exampleSlot } from '../../stores/croct';
+
+export default () => {
+    const example = useStore(exampleSlot);
+
+    return (
+        <>
+            <h4>On solid: {example().content.title}</h4>
+            <p>{example().content.body}</p>
+            <form
+                onSubmit={e => {
+                    const data = new FormData(e.target);
+                    setInterests(data.get('interests'));
+                    e.preventDefault();
+                }}
+            >
+                <label>My interests: </label>
+                <input name="interests" type="text" />{' '}
+                <button type="submit">Update interest</button>
+            </form>
+        </>
+    );
+};
+```
+
+### Vue
+
+```vue live title="src/components/Example.vue" props={{ "client:only": "vue" }}
+<template>
+    <h4>On Vue: {{ example.content.title }}</h4>
+    <p>{{ example.content.body }}</p>
+    <form @submit.prevent="submit">
+        <label>My interests: </label>
+        <input name="interests" v-model="interests" type="text" />
+        <button type="submit">Update interest</button>
+    </form>
+</template>
+
+<script setup>
+import { useStore } from '@nanostores/vue';
+import { exampleSlot } from '../../stores/croct';
+
+const example = useStore(exampleSlot);
+</script>
+<script>
+import { setInterests } from '../../stores/croct';
+export default {
+    data: () => ({
+        interests: '',
+    }),
+    methods: {
+        submit() {
+            setInterests(this.interests);
+        },
+    },
+};
+</script>
+```

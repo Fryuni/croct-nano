@@ -7,7 +7,7 @@
     <br />
     A NanoStore atom for <a href="https://croct.com?utm_campaign=croct-nano&utm_source=package-readme">Croct</a> content.
     <br />
-    <sub>by <a href="https://fryuni.dev">Luiz Ferraz</a></sub>
+    <sub>by <a href="https://fryuni.dev">Fryuni (Luiz Ferraz)</a></sub>
 </p>
 <p align="center">
     <!-- <img alt="Build" src="https://img.shields.io/badge/build-passing-green" /> -->

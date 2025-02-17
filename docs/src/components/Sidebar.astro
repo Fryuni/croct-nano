@@ -1,0 +1,13 @@
+---
+import SidebarSublist from '@astrojs/starlight/components/SidebarSublist.astro';
+import MobileMenuFooter from '@astrojs/starlight/components/MobileMenuFooter.astro';
+import PartnerBadge from './PartnerBadge.astro';
+---
+
+<SidebarSublist sublist={Astro.locals.starlightRoute.sidebar} />
+
+<PartnerBadge />
+
+<div class="md:sl-hidden">
+    <MobileMenuFooter />
+</div>
