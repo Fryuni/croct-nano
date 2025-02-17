@@ -1,13 +1,11 @@
 {
-  "$schema": "https://turbo.build/schema.json",
-  "extends": ["//"],
-  "tasks": {
-    "build": {
-      "inputs": ["*", "src/**", "public/**", "../package/package.json"],
-      "outputs": [".vercel", ".astro","dist"],
-      "passThroughEnv": [
-        "CROCT_APP_ID"
-      ]
+    "$schema": "https://turbo.build/schema.json",
+    "extends": ["//"],
+    "tasks": {
+        "build": {
+            "inputs": ["*", "src/**", "public/**", "../package/package.json"],
+            "outputs": [".vercel", ".astro", "dist"],
+            "passThroughEnv": ["CROCT_APP_ID"]
+        }
     }
-  }
 }
