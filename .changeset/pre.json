@@ -1,10 +1,14 @@
 {
-    "mode": "pre",
-    "tag": "beta",
-    "initialVersions": {
-        "@example/astro-multi-framework": "0.0.1",
-        "croct-nanostores": "0.0.0",
-        "docs": "0.0.1"
-    },
-    "changesets": ["green-tables-breathe", "lemon-cooks-film", "tidy-fishes-float"]
+  "mode": "exit",
+  "tag": "beta",
+  "initialVersions": {
+    "@example/astro-multi-framework": "0.0.1",
+    "croct-nanostores": "0.0.0",
+    "docs": "0.0.1"
+  },
+  "changesets": [
+    "green-tables-breathe",
+    "lemon-cooks-film",
+    "tidy-fishes-float"
+  ]
 }
