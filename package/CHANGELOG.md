@@ -1,5 +1,11 @@
 # croct-nanostores
 
+## 0.1.1
+
+### Patch Changes
+
+- 655060b: Fix flash of default content during debouncing
+
 ## 0.1.0
 
 ### Minor Changes
