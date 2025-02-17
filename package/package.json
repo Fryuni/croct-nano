@@ -45,7 +45,7 @@
         "build": "tsup",
         "dev": "tsup --watch",
         "prepublish": "pnpm run build && cp ../README.md .",
-        "size": "rm esbuild-why*.html && pnpm size-limit",
+        "size": "rm -f esbuild-why*.html && pnpm size-limit",
         "test": "vitest run --coverage",
         "test:dev": "vitest --coverage.enabled=true"
     },
