@@ -45,9 +45,9 @@ export default () => {
             <p>{example.content.body}</p>
             <form
                 onSubmit={e => {
+                    e.preventDefault();
                     const data = new FormData(e.target);
                     setInterests(data.get('interests'));
-                    e.preventDefault();
                 }}
             >
                 <label>My interests: </label>
@@ -74,9 +74,9 @@ export default () => {
             <p>{example.content.body}</p>
             <form
                 onSubmit={e => {
+                    e.preventDefault();
                     const data = new FormData(e.target);
                     setInterests(data.get('interests'));
-                    e.preventDefault();
                 }}
             >
                 <label>My interests: </label>
@@ -103,9 +103,9 @@ export default () => {
             <p>{example().content.body}</p>
             <form
                 onSubmit={e => {
+                    e.preventDefault();
                     const data = new FormData(e.target);
                     setInterests(data.get('interests'));
-                    e.preventDefault();
                 }}
             >
                 <label>My interests: </label>
