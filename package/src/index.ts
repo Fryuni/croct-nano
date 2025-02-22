@@ -1,5 +1,6 @@
 import { croct } from './plug.js';
-import { type CroctAtom, croctContent, register } from './croctAtom.js';
+import { type CroctAtom, croctContent } from './croctAtom.js';
+import { register } from './croctPlugin.js';
 
 register();
 
