@@ -3,7 +3,7 @@ import type { JsonObject } from '@croct/plug/sdk/json.js';
 import type { SlotContent, VersionedSlotId } from '@croct/plug/slot.js';
 import { croct } from './plug.js';
 import { persistentAtom } from '@nanostores/persistent';
-import { atom, onMount, task, type WritableAtom } from 'nanostores';
+import { atom, onMount, task, type ReadableAtom, type WritableAtom } from 'nanostores';
 import { activeAtoms } from './globalState.js';
 
 type State<I extends VersionedSlotId = string, P extends JsonObject = JsonObject> =
@@ -13,10 +13,16 @@ type State<I extends VersionedSlotId = string, P extends JsonObject = JsonObject
 export type CroctAtom<
     P extends JsonObject = JsonObject,
     I extends VersionedSlotId = string,
-> = WritableAtom<State<I, P>> & {
+> = ReadableAtom<State<I, P>> & {
     refresh: () => Promise<void>;
 };
 
+type InnerCroctAtom<
+    P extends JsonObject = JsonObject,
+    I extends VersionedSlotId = string,
+> = WritableAtom<State<I, P>> & {
+    refresh: () => Promise<void>;
+};
 
 export function croctContent<P extends JsonObject, const I extends VersionedSlotId>(
     slotId: I,
@@ -35,7 +41,7 @@ export function croctContent<P extends JsonObject, const I extends VersionedSlot
                 },
             );
 
-    const croctAtom: CroctAtom<P, I> = Object.assign(baseAtom, {
+    const croctAtom: InnerCroctAtom<P, I> = Object.assign(baseAtom, {
         refresh: () =>
             task(async () => {
                 try {
