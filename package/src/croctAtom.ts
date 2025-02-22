@@ -17,7 +17,6 @@ export type CroctAtom<
     refresh: () => Promise<void>;
 };
 
-const activeAtoms = new Set<CroctAtom<any, any>>();
 
 export function croctContent<P extends JsonObject, const I extends VersionedSlotId>(
     slotId: I,
