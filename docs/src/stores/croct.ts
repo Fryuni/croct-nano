@@ -1,4 +1,5 @@
 import { croct, croctContent } from 'croct-nanostores';
+import { allTasks } from 'nanostores';
 
 export const exampleSlot = croctContent('example@1', {
     _component: 'example-component@1',
@@ -19,3 +20,5 @@ export const setInterests = (interests: string) => {
         )
         .save();
 };
+
+await allTasks();
