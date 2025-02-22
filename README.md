@@ -1,6 +1,6 @@
 <p align="center">
-    <a href="https://croct-nano-docs.vercel.dev">
-        <img src="https://croct-nano-docs.vercel.dev/favicon.webp" alt="Croct Nanostores" height="200"/>
+    <a href="https://croct-nano-docs.vercel.app">
+        <img src="https://croct-nano-docs.vercel.app/fancy-logo.png" alt="Croct Nanostores" height="200"/>
     </a>
     <br />
     <strong>[UNNOFICIAL] <a href="https://croct.com?utm_campaign=croct-nano&utm_source=package-readme">Croct</a> + Nanostore</strong>
