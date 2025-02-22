@@ -1,6 +1,10 @@
 import { croct, croctContent } from 'croct-nanostores';
 import { allTasks } from 'nanostores';
 
+if (!import.meta.env.SSR) {
+    await import('@/utils/croctClient');
+}
+
 export const exampleSlot = croctContent('example@1', {
     _component: 'example-component@1',
     title: 'Default static content',
@@ -8,7 +12,6 @@ export const exampleSlot = croctContent('example@1', {
 });
 
 export const setInterests = (interests: string) => {
-    console.log({ interests });
     croct.user
         .edit()
         .set(
