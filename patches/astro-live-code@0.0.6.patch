@@ -1,0 +1,59 @@
+diff --git a/src/lib/remark.js b/src/lib/remark.js
+index 7394cfe9396dd558a431abd63d27075a8f53b3c5..cd1f2f45f2854bdcf01ed9f98cd9c1d70697840b 100644
+--- a/src/lib/remark.js
++++ b/src/lib/remark.js
+@@ -23,15 +23,7 @@ export default function examples(options) {
+         const meta = node.meta
+         const parsedMeta = parseMeta(meta)
+ 
+-        let src = isDiff
+-          ? node.value
+-              ?.split('\n')
+-              // filter out lines with leading -
+-              .filter((line) => !line.match(/^[-]/))
+-              // remove leading + from lines
+-              .map((line) => line.replace(/^[+]/, ''))
+-              .join('\n')
+-          : node.value
++        let src = getSrc(node, isDiff, parsedMeta)
+ 
+         const i = examples.length
+ 
+@@ -49,7 +41,9 @@ export default function examples(options) {
+         const filename = toPOSIX(
+           [
+             parentId.replace(path.extname(parentId), ''),
+-            `${exampleComponentName}.${fileExt}`,
++            `${parsedMeta.exampleName || exampleComponentName}${
++              parsedMeta.exampleSuffix || ''
++            }.${fileExt}`,
+           ].join('-'),
+         )
+ 
+@@ -402,6 +396,26 @@ function getLang(node) {
+   return node.lang
+ }
+ 
++function getSrc(node, isDiff, parsedMeta) {
++  const srcParts = []
++
++  if (parsedMeta.jsxImport) {
++    srcParts.push(`/** @jsxImportSource ${parsedMeta.jsxImport} */`)
++  }
++
++  srcParts.push(isDiff
++    ? node.value
++        ?.split('\n')
++        // filter out lines with leading -
++        .filter((line) => !line.match(/^[-]/))
++        // remove leading + from lines
++        .map((line) => line.replace(/^[+]/, ''))
++        .join('\n')
++    : node.value)
++
++  return srcParts.join('\n')
++}
++
+ function parsePropsFromString(string) {
+   const regex = /props={{(.*?)}}/g
+   const matches = []
