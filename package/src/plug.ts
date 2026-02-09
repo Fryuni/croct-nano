@@ -1,5 +1,4 @@
-import mod from '@croct/plug';
-import type { GlobalPlug } from '@croct/plug/plug.js';
+import croct from '@croct/plug';
+export type { GlobalPlug } from '@croct/plug/plug';
 
-// Having the plug compatible with ancient CJS causes this thing
-export const croct = mod.default ?? (mod as unknown as GlobalPlug);
+export { croct };

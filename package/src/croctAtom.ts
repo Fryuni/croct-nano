@@ -1,6 +1,6 @@
-import type { FetchOptions } from '@croct/plug/plug.js';
-import type { JsonObject } from '@croct/plug/sdk/json.js';
-import type { SlotContent, VersionedSlotId } from '@croct/plug/slot.js';
+import type { FetchOptions } from '@croct/plug/plug';
+import type { SlotContent, VersionedSlotId } from '@croct/plug/slot';
+import type { JsonObject } from '@croct/json';
 import { croct } from './plug.js';
 import { persistentAtom } from '@nanostores/persistent';
 import { atom, onMount, task, type ReadableAtom, type WritableAtom } from 'nanostores';
@@ -27,7 +27,7 @@ type InnerCroctAtom<
 export function croctContent<P extends JsonObject, const I extends VersionedSlotId>(
     slotId: I,
     fallbackContent: SlotContent<I, P>,
-    options?: FetchOptions,
+    options?: Omit<FetchOptions<SlotContent<I, P>>, 'fallback'>,
 ): CroctAtom<P, I> {
     const baseAtom =
         options?.timeout !== undefined
@@ -45,9 +45,9 @@ export function croctContent<P extends JsonObject, const I extends VersionedSlot
         refresh: () =>
             task(async () => {
                 try {
-                    const { content } = await croct.fetch<any, I>(slotId, options);
+                    const { content } = await croct.fetch(slotId, options);
 
-                    croctAtom.set({ stage: 'loaded', content });
+                    croctAtom.set({ stage: 'loaded', content: content as SlotContent<I, any> });
                 } catch (error) {
                     console.error(`Error while refreshing Croct Atom for "${slotId}":\n`, error);
 
