@@ -1,4 +1,4 @@
-import type { FetchOptions } from '@croct/plug/plug';
+import type { FetchOptions, FetchResponse } from '@croct/plug/plug';
 import type { SlotContent, VersionedSlotId } from '@croct/plug/slot';
 import type { JsonObject } from '@croct/json';
 import { croct } from './plug.js';
@@ -6,9 +6,11 @@ import { persistentAtom } from '@nanostores/persistent';
 import { atom, onMount, task, type ReadableAtom, type WritableAtom } from 'nanostores';
 import { activeAtoms } from './globalState.js';
 
+type SlotMetadata = NonNullable<FetchResponse<any>['metadata']>;
+
 type State<I extends VersionedSlotId = string, P extends JsonObject = JsonObject> =
-    | { stage: 'initial' | 'fallback'; content: P }
-    | { stage: 'loaded'; content: SlotContent<I, any> };
+    | { stage: 'initial' | 'fallback'; content: P; metadata?: never }
+    | { stage: 'loaded'; content: SlotContent<I, any>; metadata: SlotMetadata };
 
 export type CroctAtom<
     P extends JsonObject = JsonObject,
@@ -40,19 +42,25 @@ export function croctContent<P extends JsonObject, const I extends VersionedSlot
                       decode: JSON.parse,
                   },
               );
+    const { set } = baseAtom;
+    delete (baseAtom as Partial<WritableAtom<State<I, P>>>).set;
 
     const croctAtom: InnerCroctAtom<P, I> = Object.assign(baseAtom, {
         refresh: () =>
             task(async () => {
                 try {
-                    const { content } = await croct.fetch(slotId, options);
+                    const { content, metadata } = await croct.fetch(slotId, options);
 
-                    croctAtom.set({ stage: 'loaded', content: content as SlotContent<I, any> });
+                    set({
+                        stage: 'loaded',
+                        content: content as SlotContent<I, any>,
+                        metadata: metadata!,
+                    });
                 } catch (error) {
                     console.error(`Error while refreshing Croct Atom for "${slotId}":\n`, error);
 
                     if (croctAtom.value?.stage !== 'loaded') {
-                        croctAtom.set({ stage: 'fallback', content: fallbackContent as P });
+                        set({ stage: 'fallback', content: fallbackContent as P });
                     }
                 }
             }),
