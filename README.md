@@ -25,7 +25,7 @@
 ## Installation
 
 ```sh
-npm/yarn/pnpm install croct-nanostores
+npm/yarn/bun install croct-nanostores
 ```
 
 ## Basic usage
@@ -70,13 +70,13 @@ Contributions to the package are always welcome!
 Before running the test suites, the development dependencies must be installed:
 
 ```sh
-pnpm install
+bun install
 ```
 
 Then, to run all tests:
 
 ```sh
-pnpm test
+bun test
 ```
 
 ## Building
@@ -84,11 +84,11 @@ pnpm test
 Before building the project, the dependencies must be installed:
 
 ```sh
-pnpm install
+bun install
 ```
 
 Then, build with
 
 ```sh
-pnpm build
+bun run build
 ```

@@ -64,27 +64,34 @@ jobs:
 
             - run: git fetch origin main:main
 
-            - name: Setup PNPM
-              uses: pnpm/action-setup@v4
+            - name: Setup Bun
+              uses: oven-sh/setup-bun@v2
 
             - name: Setup Node
               uses: actions/setup-node@v4.2.0
               with:
                   node-version: 22
                   registry-url: 'https://registry.npmjs.org'
-                  cache: 'pnpm'
+
+            - name: Cache Bun dependencies
+              uses: actions/cache@v4
+              with:
+                  path: ~/.bun/install/cache
+                  key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
+                  restore-keys: |
+                      ${{ runner.os }}-bun-
 
             - name: Install dependencies
-              run: pnpm install
+              run: bun install --frozen-lockfile
 
             - name: Build Packages
-              run: pnpm run build
+              run: bun run build
 
             - name: Bump Package Versions
               id: changesets
               run: |
-                  pnpm exec changeset status --output status.output.json 2>&1
-                  pnpm exec changeset version --snapshot ${{ steps.getSnapshotName.outputs.result }}
+                  bunx changeset status --output status.output.json 2>&1
+                  bunx changeset version --snapshot ${{ steps.getSnapshotName.outputs.result }}
 
                   EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
                   echo "status<<$EOF" >> $GITHUB_OUTPUT
@@ -100,8 +107,8 @@ jobs:
             - name: Publish Release
               id: publish
               run: |
-                  GITHUB_ACTIONS=0 pnpm run build > build.output.txt 2>&1
-                  pnpm exec changeset publish --tag pr--${{ steps.getSnapshotName.outputs.result }} > publish.output.txt 2>&1
+                  GITHUB_ACTIONS=0 bun run build > build.output.txt 2>&1
+                  bunx changeset publish --tag pr--${{ steps.getSnapshotName.outputs.result }} > publish.output.txt 2>&1
 
                   EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
 

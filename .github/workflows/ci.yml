@@ -28,7 +28,7 @@ env:
     NODE_OPTIONS: --max-old-space-size=6144
 
 jobs:
-    # Build primes out Turbo build cache and pnpm cache
+    # Build primes out Turbo build cache
     build:
         name: 'Build - Node ${{ env.NODE_VERSION }}'
         runs-on: ubuntu-latest
@@ -52,23 +52,30 @@ jobs:
                   restore-keys: |
                       ${{ runner.os }}-${{ env.NODE_VERSION }}-turbo-
 
-            - name: Setup PNPM
-              uses: pnpm/action-setup@v4
+            - name: Setup Bun
+              uses: oven-sh/setup-bun@v2
 
             - name: Setup node@${{ env.NODE_VERSION }}
               uses: actions/setup-node@main
               with:
                   node-version: ${{ env.NODE_VERSION }}
-                  cache: 'pnpm'
+
+            - name: Cache Bun dependencies
+              uses: actions/cache@v4
+              with:
+                  path: ~/.bun/install/cache
+                  key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
+                  restore-keys: |
+                      ${{ runner.os }}-bun-
 
             - name: Install dependencies
-              run: pnpm install
+              run: bun install --frozen-lockfile
 
             - name: Build Packages
-              run: pnpm run build
+              run: bun run build
 
             - name: Build Examples
-              run: pnpm run build:examples
+              run: bun run build:examples
 
     lint:
         name: Lint
@@ -79,21 +86,28 @@ jobs:
             - name: Checkout
               uses: actions/checkout@v4
 
-            - name: Setup PNPM
-              uses: pnpm/action-setup@v4
+            - name: Setup Bun
+              uses: oven-sh/setup-bun@v2
 
             - name: Setup Node
               uses: actions/setup-node@v4.2.0
               with:
                   node-version: 22
-                  cache: 'pnpm'
+
+            - name: Cache Bun dependencies
+              uses: actions/cache@v4
+              with:
+                  path: ~/.bun/install/cache
+                  key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
+                  restore-keys: |
+                      ${{ runner.os }}-bun-
 
             - name: Install dependencies
-              run: pnpm install
+              run: bun install --frozen-lockfile
 
             - name: Format Check
               run: |
-                  pnpm run format --check
+                  bun run format --check
 
     test:
         name: 'Test: Node ${{ env.NODE_VERSION }}'
@@ -114,23 +128,30 @@ jobs:
                   restore-keys: |
                       ${{ runner.os }}-${{ env.NODE_VERSION }}-turbo-
 
-            - name: Setup PNPM
-              uses: pnpm/action-setup@v4
+            - name: Setup Bun
+              uses: oven-sh/setup-bun@v2
 
             - name: Setup node@${{ env.NODE_VERSION }}
               uses: actions/setup-node@v4.2.0
               with:
                   node-version: ${{ env.NODE_VERSION }}
-                  cache: 'pnpm'
+
+            - name: Cache Bun dependencies
+              uses: actions/cache@v4
+              with:
+                  path: ~/.bun/install/cache
+                  key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
+                  restore-keys: |
+                      ${{ runner.os }}-bun-
 
             - name: Install dependencies
-              run: pnpm install
+              run: bun install --frozen-lockfile
 
             - name: Build Packages
-              run: pnpm run build
+              run: bun run build
 
             - name: Test
-              run: pnpm run test
+              run: bun run test
 
     test-e2e:
         name: E2E test
@@ -151,42 +172,27 @@ jobs:
                   restore-keys: |
                       ${{ runner.os }}-${{ env.NODE_VERSION }}-turbo-
 
-            - name: Setup PNPM
-              uses: pnpm/action-setup@v4
+            - name: Setup Bun
+              uses: oven-sh/setup-bun@v2
 
             - name: Setup node@${{ env.NODE_VERSION }}
               uses: actions/setup-node@v4.2.0
               with:
                   node-version: ${{ env.NODE_VERSION }}
-                  cache: 'pnpm'
+
+            - name: Cache Bun dependencies
+              uses: actions/cache@v4
+              with:
+                  path: ~/.bun/install/cache
+                  key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
+                  restore-keys: |
+                      ${{ runner.os }}-bun-
 
             - name: Install dependencies
-              run: pnpm install
+              run: bun install --frozen-lockfile
 
             - name: Install Playwright browsers
-              run: pnpm exec playwright install --with-deps
+              run: bunx playwright install --with-deps
 
             - name: Test
-              run: pnpm test:e2e
-
-    duplicated-packages:
-        name: Check for duplicated dependencies
-        runs-on: ubuntu-latest
-        steps:
-            - name: Checkout
-              uses: actions/checkout@v4
-
-            - name: Setup PNPM
-              uses: pnpm/action-setup@v4
-
-            - name: Setup node
-              uses: actions/setup-node@v4.2.0
-              with:
-                  node-version: 22
-                  cache: 'pnpm'
-
-            - name: Install dependencies
-              run: pnpm install
-
-            - name: Check duplicated dependencies
-              run: pnpm dedupe --prefer-offline --check
+              run: bun run test:e2e

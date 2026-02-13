@@ -37,22 +37,29 @@ jobs:
                   restore-keys: |
                       ${{ runner.os }}-${{ matrix.NODE_VERSION }}-turbo-
 
-            - name: Setup PNPM
-              uses: pnpm/action-setup@v4
+            - name: Setup Bun
+              uses: oven-sh/setup-bun@v2
 
             - name: Setup Node
               uses: actions/setup-node@v4.2.0
               with:
                   node-version: 22
-                  cache: 'pnpm'
                   registry-url: 'https://registry.npmjs.org'
 
+            - name: Cache Bun dependencies
+              uses: actions/cache@v4
+              with:
+                  path: ~/.bun/install/cache
+                  key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
+                  restore-keys: |
+                      ${{ runner.os }}-bun-
+
             - name: Install dependencies
-              run: pnpm install
+              run: bun install --frozen-lockfile
 
             - name: Publish preview
               if: ${{ contains(github.event.pull_request.labels.*.name, 'preview') }}
-              run: pnpm cut-release
+              run: bun run cut-release
               env:
                   # Use Node auth from above
                   NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -62,9 +69,9 @@ jobs:
               if: ${{ github.event_name == 'push' }}
               uses: changesets/action@v1
               with:
-                  # Note: pnpm install after versioning is necessary to refresh lockfile
-                  version: pnpm run version
-                  publish: pnpm cut-release
+                  # Note: bun install after versioning is necessary to refresh lockfile
+                  version: bun run version
+                  publish: bun run cut-release
                   commit: '[ci] release'
                   title: '[ci] release'
               env:
