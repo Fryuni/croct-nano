@@ -118,7 +118,18 @@ The `timeout` option controls how long the SDK waits for a fetch response before
 
 ## Auto-refresh
 
-Atoms automatically refresh when user behavior changes. The library listens for tracking events from the Croct SDK and triggers a content refresh so your UI stays in sync with the user's current context.
+When the `auto-refresh-atom` plugin is enabled, atoms automatically refresh when user behavior changes. The library listens for tracking events from the Croct SDK and triggers a content refresh so your UI stays in sync with the user's current context.
+
+To enable auto-refresh, add `'auto-refresh-atom'` to the `plugins` array when initializing Croct:
+
+```ts
+import { croct } from 'croct-nanostores';
+
+croct.plug({
+    appId: '<YOUR_APP_ID>',
+    plugins: ['auto-refresh-atom'],
+});
+```
 
 ### Events that trigger a refresh
 

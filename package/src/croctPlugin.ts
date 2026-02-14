@@ -1,7 +1,6 @@
 import type { TrackingEventType } from '@croct/plug/sdk/tracking';
-import { croct } from './plug.js';
-import { mark, refreshActive } from './globalState.js';
-import type { GlobalPlug } from '@croct/plug/plug';
+import croct from '@croct/plug';
+import { refreshActive } from './croctAtom.js';
 
 const refreshEvents: TrackingEventType[] = [
     'userSignedIn',
@@ -17,46 +16,27 @@ const refreshEvents: TrackingEventType[] = [
 
 let refreshTimer: NodeJS.Timeout | null = null;
 
-export function register(): void {
-    if ((croct as any)[mark] === true) return;
+croct.extend('auto-refresh-atom', ({ sdk }) => {
+    sdk.tracker.addListener(({ event }) => {
+        if (!refreshEvents.includes(event.type)) return;
 
-    const originalPlug = croct.plug.bind(croct);
+        if (refreshTimer) {
+            clearTimeout(refreshTimer);
+        }
 
-    Object.assign(croct, {
-        [mark]: true,
-        plug: (options: Parameters<GlobalPlug['plug']>[0]) => {
-            return originalPlug({
-                ...options,
-                plugins: {
-                    ...options?.plugins,
-                    'croct-nano': {},
-                },
-            });
-        },
-    });
-
-    croct.extend('croct-nano', ({ sdk }) => {
-        sdk.tracker.addListener(({ event }) => {
-            if (!refreshEvents.includes(event.type)) return;
-
-            if (refreshTimer) {
-                clearTimeout(refreshTimer);
-            }
+        refreshTimer = setTimeout(() => {
+            refreshActive();
 
             refreshTimer = setTimeout(() => {
                 refreshActive();
 
                 refreshTimer = setTimeout(() => {
                     refreshActive();
-
-                    refreshTimer = setTimeout(() => {
-                        refreshActive();
-                        refreshTimer = null;
-                    }, 1500);
-                }, 1000);
-            }, 500);
-        });
-
-        return { enable() {}, disable() {} };
+                    refreshTimer = null;
+                }, 1500);
+            }, 1000);
+        }, 500);
     });
-}
+
+    return { enable() {}, disable() {} };
+});
