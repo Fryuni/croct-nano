@@ -6,6 +6,7 @@ croct.plug({
     appId: CROCT_APP_ID,
     debug: import.meta.env.DEV,
     token: null,
+    plugins: ['auto-refresh-atom'],
 });
 
 declare global {
