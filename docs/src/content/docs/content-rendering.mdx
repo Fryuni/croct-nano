@@ -1,0 +1,187 @@
+---
+title: Content rendering
+description: Understand how Croct Nanostores manages content state, handles errors, persists data, and auto-refreshes on user behavior changes.
+---
+
+When you create an atom with `croctContent`, the library manages the full lifecycle of fetching, caching, and updating personalized content. This page explains how each piece works so you can build reliable experiences around it.
+
+## Content state
+
+Every atom created by `croctContent` holds a state object with two properties: `stage` and `content`. The `stage` tells you where the content came from, and the `content` is the actual data to render.
+
+There are three stages:
+
+| Stage      | Meaning                                                                                   |
+| ---------- | ----------------------------------------------------------------------------------------- |
+| `initial`  | The atom holds the fallback content you provided and hasn't finished its first fetch yet. |
+| `loaded`   | Personalized content was successfully fetched from Croct.                                 |
+| `fallback` | The fetch failed and the atom fell back to the content you provided.                      |
+
+You can use the `stage` to adjust your UI. For example, you might show a loading indicator during `initial`, or log an analytics event when content reaches `loaded`:
+
+```tsx title="src/components/Banner.tsx"
+import { useStore } from '@nanostores/react';
+import { bannerContent } from '../stores/banner';
+
+export function Banner() {
+    const banner = useStore(bannerContent);
+
+    if (banner.stage === 'initial') {
+        return <BannerSkeleton />;
+    }
+
+    return (
+        <section>
+            <h1>{banner.content.title}</h1>
+            <p>{banner.content.subtitle}</p>
+        </section>
+    );
+}
+```
+
+:::tip
+In most cases, you don't need to check the `stage` at all. Since the atom always holds valid content (either your fallback or the personalized version), you can render `banner.content` directly and the UI updates seamlessly when personalized content arrives.
+:::
+
+### State transitions
+
+The atom follows a predictable state machine:
+
+```
+initial ──fetch succeeds──▶ loaded
+   │                          │
+   │ fetch fails              │ refresh succeeds
+   ▼                          ▼
+fallback ─refresh succeeds─▶ loaded
+```
+
+Two important guarantees:
+
+1. **Content never disappears** — The atom always holds renderable content, regardless of the stage.
+2. **Loaded content is sticky** — Once the atom reaches the `loaded` stage, it never reverts to `initial` or `fallback`, even if a subsequent refresh fails. The last successfully loaded content is preserved.
+
+### Metadata
+
+When the atom is in the `loaded` stage, a `metadata` property is available alongside the content. This contains information from the Croct API about the content delivery, such as the experiment and experience that produced it.
+
+```ts
+const banner = useStore(bannerContent);
+
+if (banner.stage === 'loaded') {
+    console.log(banner.metadata);
+    // { experimentId: '...', experienceId: '...', ... }
+}
+```
+
+The `metadata` property is only present in the `loaded` stage. In `initial` and `fallback` stages, it is `undefined`.
+
+## Fault tolerance
+
+Croct Nanostores is designed to never break your UI, even when things go wrong:
+
+- **Fetch failures are silent** — If the initial fetch or any refresh fails, the error is logged to the console but never thrown. Your component keeps rendering with the fallback content.
+- **Loaded content is preserved** — Once personalized content has been successfully loaded, a failed refresh does not replace it. The atom stays in the `loaded` stage with the last good content.
+- **Fallback is always valid** — Because you provide the fallback content at atom creation time with the same type as the slot schema, the UI always has structurally valid data to render.
+
+## Persistence
+
+By default, atoms persist their state to `localStorage`. This means that when a user returns to your site, they immediately see the last personalized content instead of the fallback — even before the new fetch completes.
+
+The storage key follows the pattern `croct-nano|{slotId}`:
+
+```
+croct-nano|home-banner@1
+```
+
+### Opting out of persistence
+
+If you set the `timeout` option on the atom, persistence is disabled. The atom uses an ephemeral in-memory store instead, and every page load starts from the fallback content:
+
+```ts
+import { croctContent } from 'croct-nanostores';
+
+const flashSale = croctContent(
+    'flash-sale@1',
+    {
+        headline: 'Sale coming soon',
+        discount: 0,
+    },
+    {
+        timeout: 3000, // 3-second fetch timeout, no persistence
+    },
+);
+```
+
+:::note
+The `timeout` option controls how long the SDK waits for a fetch response before giving up. Setting any timeout value — even a generous one — switches the atom to ephemeral mode. If you want persistence with a timeout, this is a current limitation of the library.
+:::
+
+## Auto-refresh
+
+Atoms automatically refresh when user behavior changes. The library listens for tracking events from the Croct SDK and triggers a content refresh so your UI stays in sync with the user's current context.
+
+### Events that trigger a refresh
+
+The following events cause all active atoms to refresh:
+
+| Event                      | Typical trigger                     |
+| -------------------------- | ----------------------------------- |
+| `userSignedIn`             | User logs in                        |
+| `userSignedUp`             | User creates an account             |
+| `userSignedOut`            | User logs out                       |
+| `userProfileChanged`       | Profile attributes are updated      |
+| `sessionAttributesChanged` | Session-level attributes change     |
+| `orderPlaced`              | User completes a purchase           |
+| `cartModified`             | Items added to or removed from cart |
+| `interestShown`            | User expresses an interest          |
+| `eventOccurred`            | Any custom event is tracked         |
+
+### How refresh works
+
+When a tracked event fires, the library doesn't refresh immediately. Instead, it uses a cascade strategy aligned with Croct's SLAs for event propagation. Since a single event on the server can trigger a chain of derived events (for example, a `userSignedUp` event may update user attributes, which in turn may match a new audience), the library refreshes three times — once per maximum link in the derivation chain:
+
+1. **First refresh** at 500 ms after the event
+2. **Second refresh** at 1,000 ms after the first
+3. **Third refresh** at 1,500 ms after the second
+
+Each refresh captures any newly derived state, ensuring personalized content fully reflects the latest user data by the time the cascade completes. If the content didn't change across refreshes, no subscriber will be called and no component wil re-render.
+
+:::tip
+You can also refresh an atom manually at any time by calling its `refresh()` method:
+
+```ts
+await bannerContent.refresh();
+```
+
+This is useful when you know the content should be updated but no tracking event was fired — for example, after changing the user's locale.
+:::
+
+### Active atom tracking
+
+Only atoms that are currently mounted (subscribed to by at least one component) are refreshed. When a component unmounts and no other subscribers remain, the atom is removed from the active set and excluded from future refreshes.
+
+This means you don't pay for refreshing content that isn't being displayed.
+
+## Manual refresh
+
+Every atom exposes a `refresh()` method that returns a promise. You can call it to force a fresh fetch from Croct at any time:
+
+```ts
+import { bannerContent } from '../stores/banner';
+
+// Refresh and wait for the result
+await bannerContent.refresh();
+
+// Or fire-and-forget
+bannerContent.refresh();
+```
+
+The refresh follows the same fault tolerance rules: if it fails, loaded content is preserved, and the error is logged to the console.
+
+## Cross-framework reactivity
+
+Because all frameworks subscribe to the same underlying Nanostores atom, a change to the atom's value is reflected everywhere simultaneously. This is particularly useful in micro-frontend architectures or Astro applications where multiple frameworks coexist on the same page.
+
+For example, if a React component tracks a user interest that triggers a refresh, a Vue component subscribed to the same atom sees the updated content at the same time — no additional wiring needed.
+
+See the [live demo](/demo) for a working example of this cross-framework reactivity.
