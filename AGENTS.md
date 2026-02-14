@@ -6,7 +6,7 @@
 
 ## OVERVIEW
 
-Unofficial Nanostores bindings for [Croct](https://croct.com) personalized content. ~165 lines of TypeScript library code that creates reactive atoms auto-refreshing on user behavior events. Framework-agnostic core with optional React/Vue/Solid/Preact/Svelte peer deps.
+Unofficial Nanostores bindings for [Croct](https://croct.com) personalized content. ~130 lines of TypeScript library code that creates reactive atoms with optional auto-refresh on user behavior events. Framework-agnostic core with `@croct/plug` as a peer dependency and optional React/Vue/Solid/Preact/Svelte peer deps.
 
 ## STRUCTURE
 
@@ -14,11 +14,9 @@ Unofficial Nanostores bindings for [Croct](https://croct.com) personalized conte
 .
 ├── package/              # Library source (published as `croct-nanostores`)
 │   ├── src/
-│   │   ├── index.ts          # Barrel + register() side-effect on import
-│   │   ├── croctAtom.ts      # croctContent() factory, CroctAtom type, state machine
-│   │   ├── croctPlugin.ts    # Auto-registers Croct plugin, event-driven refresh
-│   │   ├── globalState.ts    # Symbol-namespaced active atom registry on globalThis
-│   │   └── plug.ts           # Re-exports @croct/plug singleton
+│   │   ├── index.ts          # Barrel + side-effect import of croctPlugin
+│   │   ├── croctAtom.ts      # croctContent() factory, CroctAtom type, state machine, active atom registry
+│   │   └── croctPlugin.ts    # Registers auto-refresh-atom plugin via croct.extend(), event-driven refresh
 │   ├── test/                 # Vitest setup only (no test files yet)
 │   └── dist/                 # Built ESM output
 ├── docs/                 # Astro + Starlight documentation site with live code demos
@@ -30,9 +28,8 @@ Unofficial Nanostores bindings for [Croct](https://croct.com) personalized conte
 
 | Task                 | Location                        | Notes                                                            |
 | -------------------- | ------------------------------- | ---------------------------------------------------------------- |
-| Core atom logic      | `package/src/croctAtom.ts`      | State machine: initial→loaded→fallback                           |
-| Event-driven refresh | `package/src/croctPlugin.ts`    | Debounced cascade: 500ms→1s→1.5s                                 |
-| Global atom registry | `package/src/globalState.ts`    | `Symbol.for('@fryuni/croct-nano')` on globalThis                 |
+| Core atom logic      | `package/src/croctAtom.ts`      | State machine, active atom registry, `refreshActive()`           |
+| Event-driven refresh | `package/src/croctPlugin.ts`    | Registers `auto-refresh-atom` plugin, debounced cascade          |
 | Public API surface   | `package/src/index.ts`          | 3 exports: `croct`, `croctContent`, `CroctAtom`                  |
 | Build config         | `package/build.ts`              | Bun.build() ESM-only, tree-shake smallest, minified              |
 | Bundle size tracking | `package/.size-limit.json`      | 3 scenarios: full, already-using-croct, already-using-nanostores |
@@ -44,13 +41,12 @@ Unofficial Nanostores bindings for [Croct](https://croct.com) personalized conte
 
 | Symbol            | Type        | Location            | Role                                                 |
 | ----------------- | ----------- | ------------------- | ---------------------------------------------------- |
-| `croctContent()`  | Factory fn  | `croctAtom.ts:27`   | Creates reactive atom for a Croct slot with fallback |
-| `CroctAtom<P,I>`  | Type        | `croctAtom.ts:13`   | `ReadableAtom<State> & { refresh() }`                |
-| `State<I,P>`      | Union type  | `croctAtom.ts:9`    | `'initial' \| 'fallback' \| 'loaded'` tagged union   |
-| `register()`      | Side-effect | `croctPlugin.ts:20` | Monkey-patches `croct.plug()` to inject plugin       |
-| `activeAtoms`     | Set         | `globalState.ts:19` | Global registry of mounted atoms                     |
-| `refreshActive()` | Function    | `globalState.ts:20` | Bulk-refresh all active atoms                        |
-| `mark`            | Symbol      | `globalState.ts:3`  | Collision-safe namespace key                         |
+| `croctContent()`  | Factory fn  | `croctAtom.ts:30`   | Creates reactive atom for a Croct slot with fallback |
+| `CroctAtom<P,I>`  | Type        | `croctAtom.ts:14`   | `ReadableAtom<State> & { refresh() }`                |
+| `State<I,P>`      | Union type  | `croctAtom.ts:10`   | `'initial' \| 'fallback' \| 'loaded'` tagged union   |
+| `croct.extend()`  | Side-effect | `croctPlugin.ts:19` | Registers `auto-refresh-atom` plugin definition      |
+| `activeAtoms`     | Set         | `croctAtom.ts:28`   | Module-level registry of mounted atoms               |
+| `refreshActive()` | Function    | `croctAtom.ts:83`   | Bulk-refresh all active atoms                        |
 
 ## CONVENTIONS
 
@@ -66,15 +62,15 @@ Unofficial Nanostores bindings for [Croct](https://croct.com) personalized conte
 
 ## ANTI-PATTERNS (THIS PROJECT)
 
-- **No `as any` in new code** — existing `(croct as any)[mark]` and `(globalThis as any)[mark]` are intentional for Symbol property access
+- **No `as any` in new code** — existing `as any` casts in library source are intentional for Nanostores internal type widening
 - **No test files exist yet** — test infrastructure is ready (Vitest + jest-extended) but tests haven't been written
-- **`register()` called as module side-effect** — importing the library auto-registers the plugin. This is intentional, not accidental
+- **`croct.extend()` called as module side-effect** — importing the library registers the `auto-refresh-atom` plugin definition. Consumers must still opt in by adding `'auto-refresh-atom'` to `plugins` in `croct.plug()`
 
 ## UNIQUE STYLES
 
 - **Persistent by default** — atoms use localStorage (`croct-nano|{slotId}` key) unless `timeout` option is set, then ephemeral
 - **Triple-cascade debounce** — refresh on domain events fires 3 times at 500ms/1000ms/1500ms intervals (not a single debounce)
-- **Plugin monkey-patching** — `register()` wraps `croct.plug()` to inject `'croct-nano'` plugin automatically
+- **Plugin registration via `croct.extend()`** — `croctPlugin.ts` registers the `auto-refresh-atom` plugin definition as a side-effect import; consumers opt in by adding `'auto-refresh-atom'` to `plugins` in `croct.plug()`
 - **Framework-agnostic via peer deps** — `@nanostores/react`, `/vue`, `/solid`, `/preact` all optional
 - **Docs as workspace member** — Astro site uses `croct-nanostores: "workspace:"` for live integration testing
 - **Multi-framework docs** — Astro config uses file-based framework routing: `*.react.*`, `*.preact.*`, `*.solid.*`

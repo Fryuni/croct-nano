@@ -28,15 +28,15 @@ Croct Nanostores bridges [Croct](https://croct.com)'s personalization engine wit
 - **Framework-agnostic** — One store, every framework. Works with React, Vue, Solid, Preact, and Svelte through the Nanostores ecosystem.
 - **Type-safe** — Full TypeScript support with [Croct's type generation](https://docs.croct.com/reference/cli). Slot IDs, fallback content, and component props are all validated at compile time.
 - **Fault-tolerant** — Atoms always hold renderable content. Fetches fail silently to your fallback; loaded content is never lost on refresh errors.
-- **Auto-refreshing** — Content updates automatically when user behavior changes (sign-in, profile update, cart modification, and more).
+- **Auto-refreshing** — Content can update automatically when user behavior changes (sign-in, profile update, cart modification, and more). Enable the `auto-refresh-atom` plugin when initializing Croct to opt in.
 - **Persistent** — Content is cached in `localStorage` by default, so returning users see personalized content instantly.
 
 ## Quick start
 
-Install the package with your framework's Nanostores connector:
+Install the package along with `@croct/plug` and your framework's Nanostores connector:
 
 ```sh
-npm install croct-nanostores @nanostores/react
+npm install croct-nanostores @croct/plug @nanostores/react
 ```
 
 Initialize Croct and create a content atom:
@@ -44,7 +44,10 @@ Initialize Croct and create a content atom:
 ```ts
 import { croct, croctContent } from 'croct-nanostores';
 
-croct.plug({ appId: '<YOUR_APP_ID>' });
+croct.plug({
+    appId: '<YOUR_APP_ID>',
+    plugins: ['auto-refresh-atom'],
+});
 
 export const banner = croctContent('home-banner@1', {
     title: 'Welcome',
