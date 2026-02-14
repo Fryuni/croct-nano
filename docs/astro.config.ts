@@ -15,9 +15,9 @@ export default defineConfig({
         starlight({
             title: 'Croct Nanostores',
             credits: true,
-            social: {
-                github: 'https://github.com/Fryuni/croct-nano',
-            },
+            social: [
+                { icon: 'github', label: 'GitHub', href: 'https://github.com/Fryuni/croct-nano' },
+            ],
             components: {
                 Sidebar: './src/components/Sidebar.astro',
             },

@@ -21,21 +21,28 @@ jobs:
               with:
                   fetch-depth: 0
 
-            - name: Setup PNPM
-              uses: pnpm/action-setup@v4
+            - name: Setup Bun
+              uses: oven-sh/setup-bun@v2
 
             - name: Setup Node
               uses: actions/setup-node@v4.2.0
               with:
                   node-version: 22
-                  cache: 'pnpm'
+
+            - name: Cache Bun dependencies
+              uses: actions/cache@v4
+              with:
+                  path: ~/.bun/install/cache
+                  key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
+                  restore-keys: |
+                      ${{ runner.os }}-bun-
 
             - name: Install dependencies
-              run: pnpm install
+              run: bun install --frozen-lockfile
 
             - name: Check for preview mode
               # Fails if in preview mode
-              run: pnpm changeset pre enter foo
+              run: bunx changeset pre enter foo
 
             - name: Remove Preview Label
               uses: actions-ecosystem/action-remove-labels@v1

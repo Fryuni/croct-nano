@@ -25,22 +25,29 @@ jobs:
                   restore-keys: |
                       ${{ runner.os }}-${{ env.NODE_VERSION }}-turbo-
 
-            - name: Setup PNPM
-              uses: pnpm/action-setup@v4
+            - name: Setup Bun
+              uses: oven-sh/setup-bun@v2
 
             - name: Setup node@${{ env.NODE_VERSION }}
               uses: actions/setup-node@main
               with:
                   node-version: ${{ env.NODE_VERSION }}
-                  cache: 'pnpm'
+
+            - name: Cache Bun dependencies
+              uses: actions/cache@v4
+              with:
+                  path: ~/.bun/install/cache
+                  key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
+                  restore-keys: |
+                      ${{ runner.os }}-bun-
 
             - name: Install dependencies
-              run: pnpm install
+              run: bun install --frozen-lockfile
 
             - uses: andresz1/size-limit-action@master
               with:
                   github_token: ${{ secrets.GITHUB_TOKEN }}
-                  script: pnpm exec size-limit --json
+                  script: bunx size-limit --json
                   skip_step: install
                   directory: package/
-                  package_manager: pnpm
+                  package_manager: bun
