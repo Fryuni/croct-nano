@@ -1,10 +1,9 @@
 import type { FetchOptions, FetchResponse } from '@croct/plug/plug';
 import type { SlotContent, VersionedSlotId } from '@croct/plug/slot';
 import type { JsonObject } from '@croct/json';
-import { croct } from './plug.js';
+import croct from '@croct/plug';
 import { persistentAtom } from '@nanostores/persistent';
 import { atom, onMount, task, type ReadableAtom, type WritableAtom } from 'nanostores';
-import { activeAtoms } from './globalState.js';
 
 type SlotMetadata = NonNullable<FetchResponse<any>['metadata']>;
 
@@ -25,6 +24,8 @@ type InnerCroctAtom<
 > = WritableAtom<State<I, P>> & {
     refresh: () => Promise<void>;
 };
+
+const activeAtoms = new Set<CroctAtom<any, any>>();
 
 export function croctContent<P extends JsonObject, const I extends VersionedSlotId>(
     slotId: I,
@@ -77,4 +78,10 @@ export function croctContent<P extends JsonObject, const I extends VersionedSlot
     });
 
     return croctAtom;
+}
+
+export function refreshActive() {
+    for (const cAtom of activeAtoms) {
+        cAtom.refresh();
+    }
 }
