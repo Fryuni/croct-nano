@@ -3,18 +3,15 @@
         <img src="https://croct-nano-docs.vercel.app/fancy-logo.png" alt="Croct Nanostores" height="200"/>
     </a>
     <br />
-    <strong>[UNNOFICIAL] <a href="https://croct.com?utm_campaign=croct-nano&utm_source=package-readme">Croct</a> + Nanostore</strong>
+    <strong><a href="https://croct.com?utm_campaign=croct-nano&utm_source=package-readme">Croct</a> + Nanostores</strong>
     <br />
-    A NanoStore atom for <a href="https://croct.com?utm_campaign=croct-nano&utm_source=package-readme">Croct</a> content.
+    Reactive, type-safe atoms for <a href="https://croct.com?utm_campaign=croct-nano&utm_source=package-readme">Croct</a> personalized content.
     <br />
-    <sub>by <a href="https://fryuni.dev">Fryuni (Luiz Ferraz)</a></sub>
+    <sub>by <a href="https://fryuni.dev">Fryuni (Luiz Ferraz)</a> · Unofficial community library</sub>
 </p>
 <p align="center">
-    <!-- <img alt="Build" src="https://img.shields.io/badge/build-passing-green" /> -->
-    <!-- <img alt="Coverage" src="https://img.shields.io/badge/coverage-100%25-green" /> -->
-    <!-- <img alt="Maintainability" src="https://img.shields.io/badge/maintainability-100-green" /> -->
-    <!-- <br /> -->
-    <br />
+    <a href="https://croct-nano-docs.vercel.app">📖 Documentation</a>
+    ·
     <a href="https://github.com/Fryuni/croct-nano/releases">📦 Releases</a>
     ·
     <a href="https://github.com/Fryuni/croct-nano/issues/new?labels=bug">🐞 Report Bug</a>
@@ -22,40 +19,70 @@
     <a href="https://github.com/Fryuni/croct-nano/issues/new?labels=enhancement">✨ Request Feature</a>
 </p>
 
-## Installation
+---
+
+Croct Nanostores bridges [Croct](https://croct.com)'s personalization engine with [Nanostores](https://github.com/nanostores/nanostores), giving you reactive atoms that deliver personalized content to any UI framework.
+
+**Why Croct Nanostores?**
+
+- **Framework-agnostic** — One store, every framework. Works with React, Vue, Solid, Preact, and Svelte through the Nanostores ecosystem.
+- **Type-safe** — Full TypeScript support with [Croct's type generation](https://docs.croct.com/reference/cli). Slot IDs, fallback content, and component props are all validated at compile time.
+- **Fault-tolerant** — Atoms always hold renderable content. Fetches fail silently to your fallback; loaded content is never lost on refresh errors.
+- **Auto-refreshing** — Content updates automatically when user behavior changes (sign-in, profile update, cart modification, and more).
+- **Persistent** — Content is cached in `localStorage` by default, so returning users see personalized content instantly.
+
+## Quick start
+
+Install the package with your framework's Nanostores connector:
 
 ```sh
-npm/yarn/bun install croct-nanostores
+npm install croct-nanostores @nanostores/react
 ```
 
-## Basic usage
+Initialize Croct and create a content atom:
 
 ```ts
-import { croct, croctContent } from 'croct-nano';
+import { croct, croctContent } from 'croct-nanostores';
 
-croct.plug({ appId: '00000000-0000-0000-0000-000000000000' });
+croct.plug({ appId: '<YOUR_APP_ID>' });
 
-const homeBanner = croctContent('home-banner', {
-    cta: {
-        link: 'https://demo.croct.com/product/e-commerce#trending',
-        label: 'SHOP NOW',
-        labelColor: '#ffffff',
-        backgroundColor: '#ff5353',
-    },
-    image: {
-        main: 'https://demo.croct.com/assets/e-commerce/images/ban-1.png',
-        background: 'https://demo.croct.com/assets/e-commerce/images/bg-1.jpg',
-    },
-    title: {
-        text: 'Complete Women Fashion Here',
-        color: '#000000',
-    },
-    preTitle: {
-        text: 'ULTIMATE COLLECTION',
-        color: '#565656',
-    },
+export const banner = croctContent('home-banner@1', {
+    title: 'Welcome',
+    subtitle: 'Explore our latest collection',
+    ctaLabel: 'Shop now',
+    ctaLink: '/products',
 });
 ```
+
+Use it in your component:
+
+```tsx
+import { useStore } from '@nanostores/react';
+import { banner } from './stores';
+
+export function Banner() {
+    const state = useStore(banner);
+
+    return (
+        <section>
+            <h1>{state.content.title}</h1>
+            <p>{state.content.subtitle}</p>
+            <a href={state.content.ctaLink}>{state.content.ctaLabel}</a>
+        </section>
+    );
+}
+```
+
+The atom renders your fallback immediately, fetches personalized content in the background, and re-renders your component when it arrives. If the fetch fails, the fallback stays — your UI never breaks.
+
+## Documentation
+
+Visit the [full documentation](https://croct-nano-docs.vercel.app) for:
+
+- [Getting started](https://croct-nano-docs.vercel.app/getting-started) — Installation, initialization, framework setup, and type safety
+- [Content rendering](https://croct-nano-docs.vercel.app/content-rendering) — State lifecycle, persistence, auto-refresh, and fault tolerance
+- [API reference](https://croct-nano-docs.vercel.app/api-reference) — Complete reference for `croctContent`, `CroctAtom`, and `State`
+- [Live demo](https://croct-nano-docs.vercel.app/demo) — Multi-framework rendering from a single store
 
 ## Contributing
 
@@ -65,30 +92,15 @@ Contributions to the package are always welcome!
 - For major changes, please [open an issue](https://github.com/Fryuni/croct-nano/issues) first to discuss what you would like to change.
 - Please make sure to update tests as appropriate.
 
-## Testing
-
-Before running the test suites, the development dependencies must be installed:
+## Development
 
 ```sh
-bun install
+bun install         # Install dependencies
+bun run build       # Build the library
+bun run dev         # Watch mode
+bun test            # Run tests
 ```
 
-Then, to run all tests:
+## License
 
-```sh
-bun test
-```
-
-## Building
-
-Before building the project, the dependencies must be installed:
-
-```sh
-bun install
-```
-
-Then, build with
-
-```sh
-bun run build
-```
+MIT

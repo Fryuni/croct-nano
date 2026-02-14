@@ -1,3 +1,268 @@
 ---
 title: Getting started
+description: Learn how to install and set up Croct Nanostores to deliver personalized content in any framework.
 ---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+Croct Nanostores bridges [Croct](https://croct.com)'s personalization engine with [Nanostores](https://github.com/nanostores/nanostores), giving you reactive, type-safe atoms that deliver personalized content to any UI framework.
+
+Because it builds on the Nanostores ecosystem, the same store works seamlessly across React, Vue, Solid, Preact, and Svelte — no framework-specific SDK required.
+
+## Prerequisites
+
+Before you begin, make sure you have:
+
+- A [Croct account](https://app.croct.com/signup) with an application set up
+- Your application ID (found in the Croct dashboard)
+- [Slots configured](https://docs.croct.com/explanation/slot) with the content structure you want to personalize
+
+## Installation
+
+Install the `croct-nanostores` package along with the connector for your framework:
+
+<Tabs>
+    <TabItem label="React">
+    ```sh
+    npm install croct-nanostores @nanostores/react
+    ```
+    </TabItem>
+
+    <TabItem label="Vue">
+    ```sh
+    npm install croct-nanostores @nanostores/vue
+    ```
+    </TabItem>
+
+    <TabItem label="Solid">
+    ```sh
+    npm install croct-nanostores @nanostores/solid
+    ```
+    </TabItem>
+
+    <TabItem label="Preact">
+    ```sh
+    npm install croct-nanostores @nanostores/preact
+    ```
+    </TabItem>
+
+    <TabItem label="Svelte">
+    ```sh
+    npm install croct-nanostores
+    ```
+
+    :::note
+    Svelte has built-in support for Nanostores through its `$store` syntax, so no additional connector package is needed.
+    :::
+    </TabItem>
+
+</Tabs>
+
+## Initialization
+
+Start by initializing Croct with your application ID. This only needs to happen once, typically in your app's entry point:
+
+```ts title="src/croct.ts"
+import { croct } from 'croct-nanostores';
+
+croct.plug({ appId: '<YOUR_APP_ID>' });
+```
+
+The `croct` object is the same [`@croct/plug`](https://docs.croct.com/reference/sdk/javascript/api/plug) singleton you may already be familiar with. Importing it from `croct-nanostores` automatically registers the library's internal plugin — no extra setup needed.
+
+## Creating your first atom
+
+Use `croctContent` to create a reactive atom for a [slot](https://docs.croct.com/explanation/slot). You provide the slot ID and a fallback content object that matches the slot's schema:
+
+```ts title="src/stores/banner.ts"
+import { croctContent } from 'croct-nanostores';
+
+export const bannerContent = croctContent('home-banner@1', {
+    title: 'Welcome to our store',
+    subtitle: 'Check out our latest products',
+    ctaLabel: 'Shop now',
+    ctaLink: '/products',
+});
+```
+
+The atom immediately holds the fallback content, then fetches personalized content from Croct in the background. When the fetch completes, the atom updates and any subscribed component re-renders automatically.
+
+Croct's API is optimized for low-latency content delivery, so in most cases the personalized content will be available before your app finishes rendering. Your users see the right experience from the start, with no visible flash of fallback content.
+
+## Using the atom in your framework
+
+Once you have an atom, subscribe to it using your framework's Nanostores connector:
+
+<Tabs>
+    <TabItem label="React">
+    ```tsx title="src/components/Banner.tsx"
+    import { useStore } from '@nanostores/react';
+    import { bannerContent } from '../stores/banner';
+
+    export function Banner() {
+        const banner = useStore(bannerContent);
+
+        return (
+            <section>
+                <h1>{banner.content.title}</h1>
+                <p>{banner.content.subtitle}</p>
+                <a href={banner.content.ctaLink}>
+                    {banner.content.ctaLabel}
+                </a>
+            </section>
+        );
+    }
+    ```
+    </TabItem>
+
+    <TabItem label="Vue">
+    ```vue title="src/components/Banner.vue"
+    <template>
+        <section>
+            <h1>{{ banner.content.title }}</h1>
+            <p>{{ banner.content.subtitle }}</p>
+            <a :href="banner.content.ctaLink">
+                {{ banner.content.ctaLabel }}
+            </a>
+        </section>
+    </template>
+
+    <script setup>
+    import { useStore } from '@nanostores/vue';
+    import { bannerContent } from '../stores/banner';
+
+    const banner = useStore(bannerContent);
+    </script>
+    ```
+    </TabItem>
+
+    <TabItem label="Solid">
+    ```tsx title="src/components/Banner.tsx"
+    import { useStore } from '@nanostores/solid';
+    import { bannerContent } from '../stores/banner';
+
+    export function Banner() {
+        const banner = useStore(bannerContent);
+
+        return (
+            <section>
+                <h1>{banner().content.title}</h1>
+                <p>{banner().content.subtitle}</p>
+                <a href={banner().content.ctaLink}>
+                    {banner().content.ctaLabel}
+                </a>
+            </section>
+        );
+    }
+    ```
+
+    :::note
+    In Solid, `useStore` returns an accessor function. Call `banner()` to read the current value.
+    :::
+    </TabItem>
+
+    <TabItem label="Preact">
+    ```tsx title="src/components/Banner.tsx"
+    import { useStore } from '@nanostores/preact';
+    import { bannerContent } from '../stores/banner';
+
+    export function Banner() {
+        const banner = useStore(bannerContent);
+
+        return (
+            <section>
+                <h1>{banner.content.title}</h1>
+                <p>{banner.content.subtitle}</p>
+                <a href={banner.content.ctaLink}>
+                    {banner.content.ctaLabel}
+                </a>
+            </section>
+        );
+    }
+    ```
+    </TabItem>
+
+    <TabItem label="Svelte">
+    ```svelte title="src/components/Banner.svelte"
+    <script>
+    import { bannerContent } from '../stores/banner';
+    </script>
+
+    <section>
+        <h1>{$bannerContent.content.title}</h1>
+        <p>{$bannerContent.content.subtitle}</p>
+        <a href={$bannerContent.content.ctaLink}>
+            {$bannerContent.content.ctaLabel}
+        </a>
+    </section>
+    ```
+
+    :::note
+    Svelte natively subscribes to Nanostores using the `$store` prefix syntax — no connector package needed.
+    :::
+    </TabItem>
+
+</Tabs>
+
+## Type safety
+
+Croct Nanostores fully supports the type system from the Croct SDK. When you use the [Croct CLI](https://docs.croct.com/reference/cli) to generate type declarations for your slots, those types automatically flow through to your atoms and components.
+
+### Generating types
+
+Run the Croct CLI to generate a type declaration file for your application's slots:
+
+```sh
+npx croct typegen
+```
+
+This produces a `.d.ts` file that augments the `@croct/plug/slot` module with your slot schemas. For example, a slot named `home-banner` with version `1` generates types like:
+
+```ts title="croct.d.ts"
+type HomeBannerV1 = {
+    title: string;
+    subtitle: string;
+    ctaLabel: string;
+    ctaLink: string;
+};
+
+declare module '@croct/plug/slot' {
+    export interface VersionedSlotMap {
+        'home-banner': {
+            latest: HomeBannerV1;
+            '1': HomeBannerV1;
+        };
+    }
+}
+```
+
+### How types flow through
+
+Once the type declaration file is in place, TypeScript validates your code end-to-end:
+
+1. **Slot ID validation** — `croctContent('home-banner@1', ...)` checks that `'home-banner'` is a known slot and `'1'` is a valid version.
+2. **Fallback content validation** — The fallback object you pass must match the slot's content schema. Missing or extra properties produce a type error.
+3. **Component-level inference** — The `content` field on the atom's state is typed to the slot's schema, so your components get full autocomplete and type checking.
+
+```ts
+// ✅ TypeScript validates the fallback matches the slot schema
+const banner = croctContent('home-banner@1', {
+    title: 'Default title',
+    subtitle: 'Default subtitle',
+    ctaLabel: 'Learn more',
+    ctaLink: '/about',
+});
+
+// ❌ Type error — 'unknown-slot' is not a valid slot ID
+const broken = croctContent('unknown-slot@1', { title: 'Oops' });
+```
+
+:::tip
+This is the same type generation system used by [`croct.fetch()`](https://docs.croct.com/reference/sdk/javascript/api/plug/fetch) and Croct's official framework SDKs. If you're already using Croct's type generation, it works with Croct Nanostores out of the box.
+:::
+
+## Next steps
+
+- Learn about the [content rendering lifecycle](/content-rendering) — how atoms manage state, handle errors, persist content, and auto-refresh on user behavior changes.
+- See the full [API reference](/api-reference) for all options and types.
+- Check out the [live demo](/demo) to see multi-framework rendering in action.
