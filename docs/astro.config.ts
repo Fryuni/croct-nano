@@ -27,6 +27,14 @@ export default defineConfig({
                     slug: 'getting-started',
                 },
                 {
+                    label: 'Content rendering',
+                    slug: 'content-rendering',
+                },
+                {
+                    label: 'API reference',
+                    slug: 'api-reference',
+                },
+                {
                     label: 'Demo',
                     slug: 'demo',
                 },
