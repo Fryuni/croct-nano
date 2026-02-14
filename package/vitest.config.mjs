@@ -6,7 +6,7 @@ process.setSourceMapsEnabled(true);
 export default defineConfig({
     keepProcessEnv: true,
     test: {
-        setupFiles: ['./tests/vitest.setup.ts'],
+        setupFiles: ['./test/vitest.setup.ts'],
     },
     dev: {
         sourcemap: true,
