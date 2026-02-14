@@ -22,7 +22,7 @@ Unofficial Nanostores bindings for [Croct](https://croct.com) personalized conte
 │   ├── test/                 # Vitest setup only (no test files yet)
 │   └── dist/                 # Built ESM output
 ├── docs/                 # Astro + Starlight documentation site with live code demos
-├── patches/              # pnpm patch for astro-live-code
+├── patches/              # Bun patch for astro-live-code
 └── .github/workflows/    # CI, release, size-limit, snapshot, todo-tracking
 ```
 
@@ -34,7 +34,7 @@ Unofficial Nanostores bindings for [Croct](https://croct.com) personalized conte
 | Event-driven refresh | `package/src/croctPlugin.ts`    | Debounced cascade: 500ms→1s→1.5s                                 |
 | Global atom registry | `package/src/globalState.ts`    | `Symbol.for('@fryuni/croct-nano')` on globalThis                 |
 | Public API surface   | `package/src/index.ts`          | 3 exports: `croct`, `croctContent`, `CroctAtom`                  |
-| Build config         | `package/tsup.config.ts`        | ESM-only, tree-shake smallest, minified                          |
+| Build config         | `package/build.ts`              | Bun.build() ESM-only, tree-shake smallest, minified              |
 | Bundle size tracking | `package/.size-limit.json`      | 3 scenarios: full, already-using-croct, already-using-nanostores |
 | Release workflow     | `.changeset/config.json`        | Changesets-based, public access                                  |
 | Docs live examples   | `docs/src/stores/croct.ts`      | Real usage with slot content + user interests                    |
@@ -59,16 +59,15 @@ Unofficial Nanostores bindings for [Croct](https://croct.com) personalized conte
 - **TypeScript strict** — all strict flags ON: `noImplicitAny`, `noUnusedLocals`, `noUnusedParameters`, `strictNullChecks`, `noImplicitReturns`, `verbatimModuleSyntax`
 - **No ESLint** — relies on TS strictness + Prettier format check only
 - **Self-documenting** — zero inline comments in source; code should speak for itself
-- **pnpm 10.29.2+** with workspaces, Turbo orchestration
+- **Bun 1.3.9+** with workspaces, Turbo orchestration
 - **Node 22** baseline (CI)
-- **Changesets** for versioning — run `pnpm changeset` before PRing version bumps
+- **Changesets** for versioning — run `bunx changeset` before PRing version bumps
 - **TODO tracking** — GitHub Action auto-creates issues from TODO comments; don't leave orphan TODOs
 
 ## ANTI-PATTERNS (THIS PROJECT)
 
 - **No `as any` in new code** — existing `(croct as any)[mark]` and `(globalThis as any)[mark]` are intentional for Symbol property access
 - **No test files exist yet** — test infrastructure is ready (Vitest + jest-extended) but tests haven't been written
-- **`package/package.json` "files" field lists "build" dir** — this dir doesn't exist; `dist/` is the actual output. Likely a leftover from template
 - **`register()` called as module side-effect** — importing the library auto-registers the plugin. This is intentional, not accidental
 
 ## UNIQUE STYLES
@@ -84,43 +83,42 @@ Unofficial Nanostores bindings for [Croct](https://croct.com) personalized conte
 
 ```bash
 # Install
-pnpm install
+bun install
 
 # Build library
-pnpm build
+bun run build
 
 # Dev (watch mode)
-pnpm dev
+bun run dev
 
 # Test (coverage)
-pnpm test
+bun test
 
 # Format (write)
-pnpm format
+bun run format
 
 # Format check (CI)
-pnpm format --check
+bun run format --check
 
 # Docs dev
-pnpm docs:dev
+bun run docs:dev
 
 # Docs build
-pnpm docs:build
+bun run docs:build
 
 # Size analysis
-cd package && pnpm size
+cd package && bunx size-limit
 
 # Version bump
-pnpm changeset
-pnpm version
+bunx changeset
+bun run version
 
 # Release
-pnpm cut-release
+bun run cut-release
 ```
 
 ## NOTES
 
-- **No dedup violations allowed** — CI runs `pnpm dedupe --prefer-offline --check`
 - **Turbo caching** — build inputs exclude `tests/` and `e2e/` dirs; test task has cache disabled
 - **Test concurrency disabled** — root scripts use `--concurrency=1` for test tasks
 - **Snapshot releases** — PR comment `/snapshot <name>` triggers snapshot publish via CI

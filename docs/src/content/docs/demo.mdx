@@ -64,7 +64,7 @@ export default () => {
 
 ```tsx live title="src/components/Example.tsx" exampleSuffix=.preact jsxImport=preact props={{ "client:only": "preact" }}
 import { useStore } from '@nanostores/preact';
-import { exampleSlot } from '../../stores/croct';
+import { exampleSlot, setInterests } from '../../stores/croct';
 
 export default () => {
     const example = useStore(exampleSlot);
@@ -93,7 +93,7 @@ export default () => {
 
 ```tsx live title="src/components/Example.tsx" exampleSuffix=.solid jsxImport=solid props={{ "client:only": "solid" }}
 import { useStore } from '@nanostores/solid';
-import { exampleSlot } from '../../stores/croct';
+import { exampleSlot, setInterests } from '../../stores/croct';
 
 export default () => {
     const example = useStore(exampleSlot);
