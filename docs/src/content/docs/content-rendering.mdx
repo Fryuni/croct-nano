@@ -173,6 +173,82 @@ Only atoms that are currently mounted (subscribed to by at least one component) 
 
 This means you don't pay for refreshing content that isn't being displayed.
 
+## Reactive attributes
+
+The `attributes` option on `croctContent` supports Nanostores atoms at any level of the object tree, and `preferredLocale` accepts a `ReadableAtom<string>` in addition to a plain string. The library recursively resolves all atoms and subscribes to them — whenever any embedded atom updates, the content automatically refreshes with the resolved values. This lets you tie individual personalization parameters to reactive application state without manually calling `refresh()`.
+
+```ts title="src/stores/banner.ts"
+import { atom } from 'nanostores';
+import { croctContent } from 'croct-nanostores';
+
+const $currency = atom('USD');
+const $segment = atom('returning');
+
+export const bannerContent = croctContent(
+    'home-banner@1',
+    {
+        title: 'Welcome',
+        subtitle: 'Explore our latest collection',
+        ctaLabel: 'Shop now',
+        ctaLink: '/products',
+    },
+    {
+        attributes: {
+            currency: $currency,
+            segment: $segment,
+        },
+    },
+);
+```
+
+When either atom is updated, the content refreshes with the new resolved attributes:
+
+```ts
+// The banner automatically refreshes with the new currency
+$currency.set('BRL');
+```
+
+Atoms can appear at any nesting level — at the root wrapping the entire object, on individual leaf values, or nested arbitrarily deep:
+
+```ts
+// Atom at the root
+croctContent('slot@1', fallback, {
+    attributes: atom({ currency: 'USD' }),
+});
+
+// Atom on a leaf value
+croctContent('slot@1', fallback, {
+    attributes: { currency: atom('USD') },
+});
+
+// Atom nested deeper
+croctContent('slot@1', fallback, {
+    attributes: { user: { currency: atom('USD') } },
+});
+```
+
+### How it works
+
+Internally, the library wraps the `attributes` value with a resolved atom that recursively walks the object tree, resolves every Nanostores atom it finds, and subscribes to all of them. The resulting flat object is passed to `croct.fetch()`. If you pass a plain object with no atoms, it behaves as a static value — attributes are sent with every fetch but don't trigger refreshes on their own.
+
+On each change, the library compares the new resolved attributes with the last fetched attributes by reference. If they are the same object, the fetch is skipped. This means the refresh only fires when an embedded atom produces a new value.
+
+:::tip
+Reactive attributes compose naturally with [auto-refresh](#auto-refresh). When both are enabled, content refreshes on attribute changes _and_ on user behavior events, giving you full coverage without any manual wiring.
+:::
+
+### When to use reactive attributes
+
+Use a Nanostores atom for `attributes` when the attributes depend on application state that can change during the user's session:
+
+- **Currency or region picker** — fetch region-specific personalization
+- **Locale selector** — pass a reactive `preferredLocale` atom and content refreshes when the user switches languages
+- **A/B test flags** — pass experiment assignments that may change at runtime
+- **User segments** — adjust content based on dynamic audience classification
+- **Derived state** — use a [computed atom](https://github.com/nanostores/nanostores#computed-stores) to combine multiple stores into a single attributes object
+
+For attributes that are static for the lifetime of the page (like a page ID or a hardcoded segment), a plain object is simpler and works just as well.
+
 ## Manual refresh
 
 Every atom exposes a `refresh()` method that returns a promise. You can call it to force a fresh fetch from Croct at any time:
