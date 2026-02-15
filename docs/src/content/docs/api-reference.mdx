@@ -91,11 +91,11 @@ Additional options passed to the underlying [`croct.fetch()`](https://docs.croct
 
 Commonly used options include:
 
-| Option            | Type     | Description                                                                                                                                               |
-| ----------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `timeout`         | `number` | Maximum time in milliseconds to wait for a response. Setting this also disables [localStorage persistence](/content-rendering#opting-out-of-persistence). |
-| `preferredLocale` | `string` | The locale to use for content personalization (e.g., `'en-US'`).                                                                                          |
-| `attributes`      | `object` | Custom attributes to pass to the personalization engine.                                                                                                  |
+| Option            | Type                             | Description                                                                                                                                                                       |
+| ----------------- | -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `timeout`         | `number`                         | Maximum time in milliseconds to wait for a response. Setting this also disables [localStorage persistence](/content-rendering#opting-out-of-persistence).                         |
+| `preferredLocale` | `string \| ReadableAtom<string>` | The locale to use for content personalization (e.g., `'en-US'`). Can be a Nanostores atom for automatic refresh on locale changes.                                                |
+| `attributes`      | `object`                         | Custom attributes to pass to the personalization engine. Values at any nesting level can be Nanostores atoms — see [reactive attributes](/content-rendering#reactive-attributes). |
 
 For the full list of supported options, see the [`croct.fetch()` reference](https://docs.croct.com/reference/sdk/javascript/api/plug/fetch).
 
@@ -105,6 +105,45 @@ const banner = croctContent('home-banner@1', fallback, {
     preferredLocale: 'pt-BR',
 });
 ```
+
+#### Reactive attributes
+
+The `attributes` option supports Nanostores atoms at any level of the object tree. When any embedded atom updates, the content automatically refreshes with the resolved values:
+
+```ts
+import { atom } from 'nanostores';
+import { croctContent } from 'croct-nanostores';
+
+const $currency = atom('USD');
+
+const banner = croctContent('home-banner@1', fallback, {
+    attributes: { currency: $currency },
+});
+
+// Updating the atom triggers a content refresh
+$currency.set('BRL');
+```
+
+You can also wrap the entire attributes object in an atom, or nest atoms arbitrarily deep — all of these are equivalent in behavior:
+
+```ts
+// Atom at the root
+croctContent('slot@1', fallback, {
+    attributes: atom({ currency: 'USD' }),
+});
+
+// Atom on a leaf value
+croctContent('slot@1', fallback, {
+    attributes: { currency: atom('USD') },
+});
+
+// Atom nested deeper
+croctContent('slot@1', fallback, {
+    attributes: { user: { currency: atom('USD') } },
+});
+```
+
+Passing a plain object with no atoms still works exactly as before. See [reactive attributes](/content-rendering#reactive-attributes) for a detailed explanation of the behavior.
 
 ### Return value
 
