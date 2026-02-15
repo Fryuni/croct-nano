@@ -260,8 +260,8 @@ Returns an `UnbindFn` that stops the synchronization when called.
 import { atom } from 'nanostores';
 import { trackSessionField } from 'croct-nanostores';
 
-const $cartTotal = atom(120);
-const stop = trackSessionField('cart.total', $cartTotal);
+const $currency = atom('USD');
+const stop = trackSessionField('preferences.currency', $currency);
 
 // Later, when you no longer want to sync
 stop();
