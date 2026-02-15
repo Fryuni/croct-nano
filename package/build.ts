@@ -1,7 +1,6 @@
-import { readFileSync, rmSync } from 'node:fs';
-import { execSync } from 'node:child_process';
+import { rmSync } from 'node:fs';
 
-const packageJson = JSON.parse(readFileSync('./package.json', 'utf-8'));
+const packageJson = await Bun.file('./package.json').json();
 const external = [
     ...Object.keys(packageJson.dependencies ?? {}),
     ...Object.keys(packageJson.peerDependencies ?? {}),
@@ -35,4 +34,5 @@ for (const output of result.outputs) {
     console.log(`  ${output.path} (${output.size} bytes)`);
 }
 
-execSync('tsc --project tsconfig.build.json', { stdio: 'inherit' });
+const res = await Bun.$`tsc --project tsconfig.build.json`.nothrow();
+process.exit(res.exitCode);
