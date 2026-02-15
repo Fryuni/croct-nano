@@ -29,6 +29,7 @@ Croct Nanostores bridges [Croct](https://croct.com)'s personalization engine wit
 - **Type-safe** — Full TypeScript support with [Croct's type generation](https://docs.croct.com/reference/cli). Slot IDs, fallback content, and component props are all validated at compile time.
 - **Fault-tolerant** — Atoms always hold renderable content. Fetches fail silently to your fallback; loaded content is never lost on refresh errors.
 - **Auto-refreshing** — Content can update automatically when user behavior changes (sign-in, profile update, cart modification, and more). Enable the `auto-refresh-atom` plugin when initializing Croct to opt in.
+- **Reactive attributes** — Use Nanostores atoms anywhere in the `attributes` object and content refreshes automatically whenever any of them update — ideal for currency pickers, user segments, or any dynamic context.
 - **Persistent** — Content is cached in `localStorage` by default, so returning users see personalized content instantly.
 
 ## Quick start
