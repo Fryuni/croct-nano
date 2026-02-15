@@ -26,12 +26,20 @@ type InnerCroctAtom<
     refresh: () => Promise<void>;
 };
 
+type Options<P extends JsonObject, I extends VersionedSlotId> = Omit<
+    FetchOptions<SlotContent<I, P>>,
+    'fallback' | 'preferredLocale' | 'attributes'
+> & {
+    preferredLocale?: string | ReadableAtom<string>;
+    attributes?: any;
+};
+
 const activeAtoms = new Set<CroctAtom<any, any>>();
 
 export function croctContent<P extends JsonObject, const I extends VersionedSlotId>(
     slotId: I,
     fallbackContent: SlotContent<I, P>,
-    options: Omit<FetchOptions<SlotContent<I, P>>, 'fallback'> = {},
+    options: Options<P, I> = {},
 ): CroctAtom<P, I> {
     const baseAtom =
         options.timeout !== undefined
@@ -46,17 +54,20 @@ export function croctContent<P extends JsonObject, const I extends VersionedSlot
               );
     const { set } = baseAtom;
     delete (baseAtom as Partial<WritableAtom<State<I, P>>>).set;
-    const $attributes = resolvedAtom<JsonObject>(options.attributes || {});
+    const $options = resolvedAtom({
+        preferredLocale: options.preferredLocale,
+        attributes: options.attributes,
+    });
 
-    let lastAttrs: JsonObject;
+    let lastOptions: JsonObject;
     const refresh = () =>
         task(async () => {
-            const attrs = $attributes.get();
-            if (attrs === lastAttrs) return;
+            const attrs = $options.get();
+            if (attrs === lastOptions) return;
             try {
                 const { content, metadata } = await croct.fetch(slotId, {
                     ...options,
-                    attributes: attrs,
+                    ...attrs,
                 });
 
                 set({
@@ -75,7 +86,7 @@ export function croctContent<P extends JsonObject, const I extends VersionedSlot
 
     const croctAtom: InnerCroctAtom<P, I> = Object.assign(baseAtom, {
         refresh: () => {
-            lastAttrs = {};
+            lastOptions = {};
             return refresh();
         },
     });
@@ -84,7 +95,7 @@ export function croctContent<P extends JsonObject, const I extends VersionedSlot
 
     onMount(croctAtom, () => {
         activeAtoms.add(croctAtom);
-        const unbind = $attributes.subscribe(refresh);
+        const unbind = $options.subscribe(refresh);
 
         return () => {
             unbind();
