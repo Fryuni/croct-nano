@@ -1,5 +1,17 @@
 # croct-nanostores
 
+## 1.0.0
+
+### Major Changes
+
+- aa16248: Replace `croct.plug()` monkey-patching with `croct.extend()` plugin registration and make `@croct/plug` a peer dependency.
+
+    Auto-refresh is no longer enabled by default. Consumers must add `'auto-refresh-atom'` to the `plugins` array when calling `croct.plug()` to opt in.
+
+### Minor Changes
+
+- 1bb5a3c: Expose slot metadata in loaded state and enforce atom immutability at runtime by removing the `set` method from the public atom object.
+
 ## 0.2.0
 
 ### Minor Changes
