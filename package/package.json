@@ -21,7 +21,7 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/Fryuni/croct-nano.git"
+        "url": "https://github.com/Fryuni/croct-nano"
     },
     "license": "MIT",
     "author": {
