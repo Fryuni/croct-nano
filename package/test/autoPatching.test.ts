@@ -1,11 +1,54 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { atom } from 'nanostores';
+import './bun.setup';
+import { afterEach, beforeEach, describe, expect, it, mock, vi } from 'bun:test';
 
-const sessionEdit = vi.hoisted(() => vi.fn());
-const userEdit = vi.hoisted(() => vi.fn());
-const track = vi.hoisted(() => vi.fn());
+mock.restore();
 
-vi.mock('@croct/plug', () => ({
+const createStore = <T>(initial: T) => {
+    let value = initial;
+    const listeners = new Set<(next: Readonly<T>, old: Readonly<T>) => void>();
+
+    const store = {
+        lc: 0,
+        value,
+        notify: () => undefined,
+        off: () => undefined,
+        get: () => value,
+        set: (next: T) => {
+            const previous = value;
+            value = next;
+            store.value = next;
+            for (const listener of listeners) {
+                listener(value, previous);
+            }
+        },
+        listen: (listener: (next: Readonly<T>, old: Readonly<T>) => void) => {
+            listeners.add(listener);
+            return () => {
+                listeners.delete(listener);
+            };
+        },
+        subscribe: (listener: (next: Readonly<T>) => void) => {
+            const wrapped = (next: Readonly<T>) => listener(next);
+            listeners.add(wrapped);
+            listener(value);
+            return () => {
+                listeners.delete(wrapped);
+            };
+        },
+    };
+
+    return store;
+};
+
+mock.module('nanostores', () => ({
+    atom: createStore,
+}));
+
+const sessionEdit = vi.fn();
+const userEdit = vi.fn();
+const track = vi.fn();
+
+mock.module('@croct/plug', () => ({
     default: {
         track,
         session: {
@@ -17,8 +60,12 @@ vi.mock('@croct/plug', () => ({
     },
 }));
 
+async function importFresh<T>(path: string): Promise<T> {
+    return import(`${path}?test=${Math.random().toString(36).slice(2)}`) as Promise<T>;
+}
+
 const createReadableAtom = <T>(initial: T) => {
-    return atom(initial);
+    return createStore(initial);
 };
 
 async function flushTimers() {
@@ -41,7 +88,8 @@ describe('auto patching', () => {
     });
 
     it('batches multiple session fields into a single patch', async () => {
-        const { trackSessionField } = await import('../src/autoPatching.js');
+        const { trackSessionField } =
+            await importFresh<typeof import('../src/autoPatching.js')>('../src/autoPatching.js');
         const patch = { set: vi.fn(), save: vi.fn() };
         sessionEdit.mockReturnValue(patch);
 
@@ -60,7 +108,8 @@ describe('auto patching', () => {
     });
 
     it('uses the latest value for repeated updates', async () => {
-        const { trackSessionField } = await import('../src/autoPatching.js');
+        const { trackSessionField } =
+            await importFresh<typeof import('../src/autoPatching.js')>('../src/autoPatching.js');
         const patch = { set: vi.fn(), save: vi.fn() };
         sessionEdit.mockReturnValue(patch);
 
@@ -84,7 +133,8 @@ describe('auto patching', () => {
     });
 
     it('stops tracking when unsubscribed', async () => {
-        const { trackSessionField } = await import('../src/autoPatching.js');
+        const { trackSessionField } =
+            await importFresh<typeof import('../src/autoPatching.js')>('../src/autoPatching.js');
         const patch = { set: vi.fn(), save: vi.fn() };
         sessionEdit.mockReturnValue(patch);
 
@@ -107,7 +157,8 @@ describe('auto patching', () => {
     });
 
     it('patches user fields with croct.user.edit()', async () => {
-        const { trackUserField } = await import('../src/autoPatching.js');
+        const { trackUserField } =
+            await importFresh<typeof import('../src/autoPatching.js')>('../src/autoPatching.js');
         const patch = { set: vi.fn(), save: vi.fn() };
         userEdit.mockReturnValue(patch);
 
@@ -122,7 +173,8 @@ describe('auto patching', () => {
     });
 
     it('tracks cart updates with cartModified', async () => {
-        const { trackCart } = await import('../src/autoPatching.js');
+        const { trackCart } =
+            await importFresh<typeof import('../src/autoPatching.js')>('../src/autoPatching.js');
         const cart = createReadableAtom({
             currency: 'USD',
             total: 899.99,
@@ -166,7 +218,8 @@ describe('auto patching', () => {
     });
 
     it('uses latest cart state for repeated updates', async () => {
-        const { trackCart } = await import('../src/autoPatching.js');
+        const { trackCart } =
+            await importFresh<typeof import('../src/autoPatching.js')>('../src/autoPatching.js');
         const cart = createReadableAtom({
             currency: 'USD',
             total: 100,
@@ -247,7 +300,8 @@ describe('auto patching', () => {
     });
 
     it('stops cart tracking when unsubscribed', async () => {
-        const { trackCart } = await import('../src/autoPatching.js');
+        const { trackCart } =
+            await importFresh<typeof import('../src/autoPatching.js')>('../src/autoPatching.js');
         const cart = createReadableAtom({
             currency: 'USD',
             total: 100,
@@ -294,7 +348,8 @@ describe('auto patching', () => {
     });
 
     it('ignores null cart values', async () => {
-        const { trackCart } = await import('../src/autoPatching.js');
+        const { trackCart } =
+            await importFresh<typeof import('../src/autoPatching.js')>('../src/autoPatching.js');
         const cart = createReadableAtom<{
             currency: string;
             total: number;

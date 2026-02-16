@@ -1,37 +1,48 @@
-import { afterAll, beforeAll, beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
+import './bun.setup';
+import {
+    afterAll,
+    afterEach,
+    beforeAll,
+    beforeEach,
+    describe,
+    expect,
+    it,
+    mock,
+    vi,
+} from 'bun:test';
 
-const persistMocks = vi.hoisted(() => ({
+const persistMocks = {
     persistentAtom: vi.fn(),
-}));
+};
 
-const croctFetch = vi.hoisted(() => vi.fn());
+const croctFetch = vi.fn();
+const testGlobal = globalThis as { window?: Window & typeof globalThis };
 
-const croctExtend = vi.hoisted(() =>
-    vi.fn(
-        (
-            name: string,
-            factory: (args: { sdk: { tracker: { addListener: Function } } }) => unknown,
-        ) => {
-            const listeners = new Set<(payload: { event: { type: string } }) => void>();
-            const tracker = {
-                addListener: (listener: (payload: { event: { type: string } }) => void) => {
-                    listeners.add(listener);
-                },
-                emit: (type: string) => {
-                    for (const listener of listeners) {
-                        listener({ event: { type } });
-                    }
-                },
-            };
-            factory({ sdk: { tracker } });
-            return tracker;
-        },
-    ),
+const croctExtend = vi.fn(
+    (
+        _name: string,
+        factory: (args: { sdk: { tracker: { addListener: Function } } }) => unknown,
+    ) => {
+        const listeners = new Set<(payload: { event: { type: string } }) => void>();
+        const tracker = {
+            addListener: (listener: (payload: { event: { type: string } }) => void) => {
+                listeners.add(listener);
+            },
+            emit: (type: string) => {
+                for (const listener of listeners) {
+                    listener({ event: { type } });
+                }
+            },
+        };
+        factory({ sdk: { tracker } });
+        return tracker;
+    },
 );
 
-const nanoTask = vi.hoisted(() => (fn: () => Promise<void>) => fn());
-const createAtom = vi.hoisted(() => (initial: unknown) => {
+const nanoTask = (fn: () => Promise<void>) => fn();
+const createAtom = (initial: unknown) => {
     const listeners = new Set<() => void>();
+    let unmount: (() => void) | undefined;
     const store = {
         value: initial,
         set: (value: unknown) => {
@@ -41,37 +52,58 @@ const createAtom = vi.hoisted(() => (initial: unknown) => {
             }
         },
         listen: (listener: () => void) => {
+            if (listeners.size === 0) {
+                unmount = store._onMount?.();
+            }
             listeners.add(listener);
             return () => {
                 listeners.delete(listener);
+                if (listeners.size === 0) {
+                    unmount?.();
+                    unmount = undefined;
+                }
             };
         },
         _listeners: listeners,
         _onMount: undefined as undefined | (() => () => void),
     };
     return store;
-});
+};
 
-const originalWindow = globalThis.window;
+const originalWindow = testGlobal.window;
 
-vi.mock('@croct/plug', () => ({
+mock.module('@croct/plug', () => ({
     default: {
         fetch: croctFetch,
         extend: croctExtend,
     },
 }));
 
-vi.mock('@nanostores/persistent', () => ({
+mock.module('@nanostores/persistent', () => ({
     persistentAtom: persistMocks.persistentAtom,
 }));
 
-vi.mock('nanostores', () => ({
+mock.module('nanostores', () => ({
     atom: createAtom,
     onMount: (store: { _onMount?: () => () => void }, handler: () => () => void) => {
         store._onMount = handler;
     },
     task: nanoTask,
 }));
+
+mock.module('@inox-tools/utils/nano', () => ({
+    resolvedAtom: (value: { preferredLocale?: unknown; attributes?: unknown }) => ({
+        get: () => ({
+            preferredLocale: value.preferredLocale,
+            attributes: value.attributes,
+        }),
+        subscribe: () => () => undefined,
+    }),
+}));
+
+async function importFresh<T>(path: string): Promise<T> {
+    return import(`${path}?test=${Math.random().toString(36).slice(2)}`) as Promise<T>;
+}
 
 async function advanceTimers(ms: number) {
     await Promise.resolve();
@@ -85,10 +117,10 @@ describe('croctContent', () => {
     });
 
     beforeEach(() => {
-        vi.resetModules();
-        globalThis.window = undefined;
+        testGlobal.window = undefined;
         croctFetch.mockReset();
         persistMocks.persistentAtom.mockReset();
+        croctExtend.mockClear();
         persistMocks.persistentAtom.mockImplementation((_key, initial) => createAtom(initial));
     });
 
@@ -97,22 +129,25 @@ describe('croctContent', () => {
     });
 
     afterAll(() => {
-        globalThis.window = originalWindow;
+        testGlobal.window = originalWindow;
+        mock.restore();
     });
 
     it('starts with fallback content in initial stage', async () => {
-        const { croctContent } = await import('../src/croctAtom.js');
-        const fallback = { title: 'Welcome' };
+        const { croctContent } =
+            await importFresh<typeof import('../src/croctAtom.js')>('../src/croctAtom.js');
+        const fallback = { _component: null, title: 'Welcome' };
         const atom = croctContent('home-banner@1', fallback);
 
         expect(atom.value).toEqual({ stage: 'initial', content: fallback });
     });
 
     it('loads content and metadata on successful refresh', async () => {
-        const { croctContent } = await import('../src/croctAtom.js');
-        const fallback = { title: 'Welcome' };
-        const loaded = { title: 'Hola' };
-        const metadata = { experimentId: 'exp-1' };
+        const { croctContent } =
+            await importFresh<typeof import('../src/croctAtom.js')>('../src/croctAtom.js');
+        const fallback = { _component: null, title: 'Welcome' };
+        const loaded = { _component: null, title: 'Hola' };
+        const metadata = { experimentId: 'exp-1', version: '1' };
 
         croctFetch.mockResolvedValue({ content: loaded, metadata });
 
@@ -127,22 +162,27 @@ describe('croctContent', () => {
     });
 
     it('auto-refreshes on creation in browser environments', async () => {
-        globalThis.window = {} as Window & typeof globalThis;
-        const { croctContent } = await import('../src/croctAtom.js');
-        const fallback = { title: 'Welcome' };
-        croctFetch.mockResolvedValue({ content: fallback, metadata: { experimentId: 'exp' } });
+        testGlobal.window = {} as Window & typeof globalThis;
+        const { croctContent } =
+            await importFresh<typeof import('../src/croctAtom.js')>('../src/croctAtom.js');
+        const fallback = { _component: null, title: 'Welcome' };
+        croctFetch.mockResolvedValue({
+            content: fallback,
+            metadata: { experimentId: 'exp', version: '1' },
+        });
 
         croctContent('home-banner@1', fallback);
         await Promise.resolve();
         await Promise.resolve();
 
         expect(croctFetch).toHaveBeenCalled();
-        globalThis.window = undefined;
+        testGlobal.window = undefined;
     });
 
     it('exposes no metadata before loading', async () => {
-        const { croctContent } = await import('../src/croctAtom.js');
-        const fallback = { title: 'Welcome' };
+        const { croctContent } =
+            await importFresh<typeof import('../src/croctAtom.js')>('../src/croctAtom.js');
+        const fallback = { _component: null, title: 'Welcome' };
         const atom = croctContent('home-banner@1', fallback);
 
         expect(atom.value).toEqual({ stage: 'initial', content: fallback });
@@ -150,10 +190,11 @@ describe('croctContent', () => {
     });
 
     it('keeps loaded content when refresh fails', async () => {
-        const { croctContent } = await import('../src/croctAtom.js');
-        const fallback = { title: 'Welcome' };
-        const loaded = { title: 'Hola' };
-        const metadata = { experimentId: 'exp-1' };
+        const { croctContent } =
+            await importFresh<typeof import('../src/croctAtom.js')>('../src/croctAtom.js');
+        const fallback = { _component: null, title: 'Welcome' };
+        const loaded = { _component: null, title: 'Hola' };
+        const metadata = { experimentId: 'exp-1', version: '1' };
 
         croctFetch.mockResolvedValueOnce({ content: loaded, metadata });
         const atom = croctContent('home-banner@1', fallback);
@@ -166,8 +207,9 @@ describe('croctContent', () => {
     });
 
     it('moves to fallback when refresh fails before any load', async () => {
-        const { croctContent } = await import('../src/croctAtom.js');
-        const fallback = { title: 'Welcome' };
+        const { croctContent } =
+            await importFresh<typeof import('../src/croctAtom.js')>('../src/croctAtom.js');
+        const fallback = { _component: null, title: 'Welcome' };
 
         croctFetch.mockRejectedValueOnce(new Error('boom'));
         const atom = croctContent('home-banner@1', fallback);
@@ -177,8 +219,9 @@ describe('croctContent', () => {
     });
 
     it('uses persistent storage when timeout is not set', async () => {
-        const { croctContent } = await import('../src/croctAtom.js');
-        const fallback = { title: 'Welcome' };
+        const { croctContent } =
+            await importFresh<typeof import('../src/croctAtom.js')>('../src/croctAtom.js');
+        const fallback = { _component: null, title: 'Welcome' };
 
         croctContent('home-banner@1', fallback);
 
@@ -190,15 +233,17 @@ describe('croctContent', () => {
     });
 
     it('hydrates from persistent storage when available', async () => {
-        const { croctContent } = await import('../src/croctAtom.js');
-        const fallback = { title: 'Welcome' };
+        const { croctContent } =
+            await importFresh<typeof import('../src/croctAtom.js')>('../src/croctAtom.js');
+        const fallback = { _component: null, title: 'Welcome' };
         const persistedState = {
             stage: 'loaded',
-            content: { title: 'Persisted' },
+            content: { _component: null, title: 'Persisted' },
             metadata: {
                 experimentId: 'exp-99',
+                version: '1',
             },
-        };
+        } as const;
 
         persistMocks.persistentAtom.mockImplementationOnce(() => createAtom(persistedState));
 
@@ -208,8 +253,9 @@ describe('croctContent', () => {
     });
 
     it('uses ephemeral storage when timeout is set', async () => {
-        const { croctContent } = await import('../src/croctAtom.js');
-        const fallback = { title: 'Welcome' };
+        const { croctContent } =
+            await importFresh<typeof import('../src/croctAtom.js')>('../src/croctAtom.js');
+        const fallback = { _component: null, title: 'Welcome' };
 
         const atom = croctContent('home-banner@1', fallback, { timeout: 3000 });
 
@@ -219,27 +265,31 @@ describe('croctContent', () => {
 });
 
 describe('auto-refresh plugin', () => {
+    let croctContent: typeof import('../src/croctAtom.js').croctContent;
+
+    beforeAll(async () => {
+        await importFresh('../src/index.js');
+        ({ croctContent } = await import('../src/croctAtom.js'));
+    });
+
     beforeEach(() => {
-        vi.resetModules();
-        croctExtend.mockClear();
+        croctFetch.mockReset();
     });
 
     it('registers auto-refresh plugin on import', async () => {
-        await import('../src/index.js');
-
         expect(croctExtend).toHaveBeenCalledWith('auto-refresh-atom', expect.any(Function));
     });
 
     it('refreshes active atoms in a three-step cascade', async () => {
-        const { croctContent } = await import('../src/croctAtom.js');
-        await import('../src/index.js');
-        const fallback = { title: 'Welcome' };
-        croctFetch.mockResolvedValue({ content: fallback, metadata: { experimentId: 'exp' } });
+        const fallback = { _component: null, title: 'Welcome' };
+        croctFetch.mockResolvedValue({
+            content: fallback,
+            metadata: { experimentId: 'exp', version: '1' },
+        });
         const atom = croctContent('home-banner@1', fallback);
         const refreshSpy = vi.spyOn(atom, 'refresh');
 
         const unsubscribe = atom.listen(() => undefined);
-        atom._onMount?.();
         const tracker = croctExtend.mock.results[0]?.value as {
             emit: (type: string) => void;
         };
@@ -260,15 +310,15 @@ describe('auto-refresh plugin', () => {
     });
 
     it('debounces refresh cascades when events repeat quickly', async () => {
-        const { croctContent } = await import('../src/croctAtom.js');
-        await import('../src/index.js');
-        const fallback = { title: 'Welcome' };
-        croctFetch.mockResolvedValue({ content: fallback, metadata: { experimentId: 'exp' } });
+        const fallback = { _component: null, title: 'Welcome' };
+        croctFetch.mockResolvedValue({
+            content: fallback,
+            metadata: { experimentId: 'exp', version: '1' },
+        });
         const atom = croctContent('home-banner@1', fallback);
         const refreshSpy = vi.spyOn(atom, 'refresh');
 
         const unsubscribe = atom.listen(() => undefined);
-        atom._onMount?.();
         const tracker = croctExtend.mock.results[0]?.value as {
             emit: (type: string) => void;
         };
@@ -294,15 +344,15 @@ describe('auto-refresh plugin', () => {
     });
 
     it('ignores unrelated tracking events', async () => {
-        const { croctContent } = await import('../src/croctAtom.js');
-        await import('../src/index.js');
-        const fallback = { title: 'Welcome' };
-        croctFetch.mockResolvedValue({ content: fallback, metadata: { experimentId: 'exp' } });
+        const fallback = { _component: null, title: 'Welcome' };
+        croctFetch.mockResolvedValue({
+            content: fallback,
+            metadata: { experimentId: 'exp', version: '1' },
+        });
         const atom = croctContent('home-banner@1', fallback);
         const refreshSpy = vi.spyOn(atom, 'refresh');
 
         const unsubscribe = atom.listen(() => undefined);
-        atom._onMount?.();
         const tracker = croctExtend.mock.results[0]?.value as {
             emit: (type: string) => void;
         };
@@ -317,17 +367,17 @@ describe('auto-refresh plugin', () => {
     });
 
     it('refreshes only mounted atoms', async () => {
-        const { croctContent } = await import('../src/croctAtom.js');
-        await import('../src/index.js');
-        const fallback = { title: 'Welcome' };
-        croctFetch.mockResolvedValue({ content: fallback, metadata: { experimentId: 'exp' } });
+        const fallback = { _component: null, title: 'Welcome' };
+        croctFetch.mockResolvedValue({
+            content: fallback,
+            metadata: { experimentId: 'exp', version: '1' },
+        });
         const mountedAtom = croctContent('home-banner@1', fallback);
         const unmountedAtom = croctContent('home-banner@1', fallback);
         const mountedSpy = vi.spyOn(mountedAtom, 'refresh');
         const unmountedSpy = vi.spyOn(unmountedAtom, 'refresh');
 
         const unsubscribe = mountedAtom.listen(() => undefined);
-        mountedAtom._onMount?.();
         const tracker = croctExtend.mock.results[0]?.value as {
             emit: (type: string) => void;
         };
