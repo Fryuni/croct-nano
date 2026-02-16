@@ -36,6 +36,7 @@ type Options<P extends JsonObject, I extends VersionedSlotId> = Omit<
 
 const activeAtoms = new Set<CroctAtom<any, any>>();
 
+/*#__PURE__*/
 export function croctContent<P extends JsonObject, const I extends VersionedSlotId>(
     slotId: I,
     fallbackContent: SlotContent<I, P>,
