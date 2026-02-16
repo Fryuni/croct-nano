@@ -32,6 +32,7 @@ type Options<P extends JsonObject, I extends VersionedSlotId> = Omit<
 > & {
     preferredLocale?: string | ReadableAtom<string>;
     attributes?: any;
+    sticky?: boolean;
 };
 
 const activeAtoms = new Set<CroctAtom<any, any>>();
@@ -40,25 +41,20 @@ const activeAtoms = new Set<CroctAtom<any, any>>();
 export function croctContent<P extends JsonObject, const I extends VersionedSlotId>(
     slotId: I,
     fallbackContent: SlotContent<I, P>,
-    options: Options<P, I> = {},
+    { preferredLocale: p, attributes: a = {}, sticky: s = true, ...options }: Options<P, I> = {},
 ): CroctAtom<P, I> {
-    const baseAtom =
-        options.timeout !== undefined
-            ? atom<State<I, P>>({ stage: 'initial', content: fallbackContent as P })
-            : persistentAtom<State<I, P>>(
-                  `croct-nano|${slotId}`,
-                  { stage: 'initial', content: fallbackContent as P },
-                  {
-                      encode: JSON.stringify,
-                      decode: JSON.parse,
-                  },
-              );
-    const { set } = baseAtom;
-    delete (baseAtom as Partial<WritableAtom<State<I, P>>>).set;
-    const $options = resolvedAtom({
-        preferredLocale: options.preferredLocale,
-        attributes: options.attributes || {},
-    });
+    const baseAtom = s
+        ? persistentAtom<State<I, P>>(
+            `croct-nano|${slotId}`,
+            { stage: 'initial', content: fallbackContent as P },
+            {
+                listen: true,
+                encode: JSON.stringify,
+                decode: JSON.parse,
+            },
+        )
+        : atom<State<I, P>>({ stage: 'initial', content: fallbackContent as P });
+    const $options = resolvedAtom({ attributes: a, preferredLocale: p });
 
     let lastAttrs: JsonObject;
     const refresh = () =>
@@ -71,44 +67,44 @@ export function croctContent<P extends JsonObject, const I extends VersionedSlot
                     ...attrs,
                 });
 
-                set({
+                baseAtom.set({
                     stage: 'loaded',
                     content: content as SlotContent<I, any>,
                     metadata: metadata!,
                 });
             } catch (error) {
-                console.error(`Error while refreshing Croct Atom for "${slotId}":\n`, error);
+                console.error(`Error while refreshing Croct Slot "${slotId}":\n`, error);
 
-                if (croctAtom.value?.stage !== 'loaded') {
-                    set({ stage: 'fallback', content: fallbackContent as P });
+                if ($atom.value?.stage !== 'loaded') {
+                    baseAtom.set({ stage: 'fallback', content: fallbackContent as P });
                 }
             }
         });
 
-    const croctAtom: InnerCroctAtom<P, I> = Object.assign(baseAtom, {
+    const $atom: InnerCroctAtom<P, I> = Object.assign(baseAtom, {
         refresh: () => {
             lastAttrs = {};
             return refresh();
         },
     });
 
-    if (typeof window !== 'undefined') croctAtom.refresh();
+    if (typeof window !== 'undefined') $atom.refresh();
 
-    onMount(croctAtom, () => {
-        activeAtoms.add(croctAtom);
+    onMount($atom, () => {
+        activeAtoms.add($atom);
         const unbind = $options.subscribe(refresh);
 
         return () => {
             unbind();
-            activeAtoms.delete(croctAtom);
+            activeAtoms.delete($atom);
         };
     });
 
-    return croctAtom;
+    return $atom;
 }
 
 export function refreshActive() {
-    for (const cAtom of activeAtoms) {
-        cAtom.refresh();
+    for (const $atom of activeAtoms) {
+        $atom.refresh();
     }
 }
