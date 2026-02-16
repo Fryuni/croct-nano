@@ -14,29 +14,20 @@ const refreshEvents: TrackingEventType[] = [
     'eventOccurred',
 ];
 
-let refreshTimer: NodeJS.Timeout | null = null;
+let pendingTimer: NodeJS.Timeout | undefined;
+let run = (counter: number = 10) => {
+    refreshActive();
+    if (counter > 0) {
+        pendingTimer = setTimeout(() => run(counter - 1), 500);
+    }
+};
 
 croct.extend('auto-refresh-atom', ({ sdk }) => {
     sdk.tracker.addListener(({ event }) => {
         if (!refreshEvents.includes(event.type)) return;
-
-        if (refreshTimer) {
-            clearTimeout(refreshTimer);
-        }
-
-        refreshTimer = setTimeout(() => {
-            refreshActive();
-
-            refreshTimer = setTimeout(() => {
-                refreshActive();
-
-                refreshTimer = setTimeout(() => {
-                    refreshActive();
-                    refreshTimer = null;
-                }, 1500);
-            }, 1000);
-        }, 500);
+        clearTimeout(pendingTimer);
+        pendingTimer = setTimeout(run, 500);
     });
 
-    return { enable() {}, disable() {} };
+    return { enable() {} };
 });
