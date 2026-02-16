@@ -1,6 +1,6 @@
 import type { TrackingEventType } from '@croct/plug/sdk/tracking';
-import croct from '@croct/plug';
 import { refreshActive } from './croctAtom.js';
+import { croct } from './common.js';
 
 const refreshEvents: TrackingEventType[] = [
     'userSignedIn',
