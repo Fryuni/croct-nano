@@ -58,21 +58,6 @@ Install the `croct-nanostores` package along with `@croct/plug` and the connecto
 
 </Tabs>
 
-## Initialization
-
-Start by initializing Croct with your application ID. This only needs to happen once, typically in your app's entry point:
-
-```ts title="src/croct.ts"
-import { croct } from 'croct-nanostores';
-
-croct.plug({
-    appId: '<YOUR_APP_ID>',
-    plugins: ['auto-refresh-atom'],
-});
-```
-
-The `croct` object is the same [`@croct/plug`](https://docs.croct.com/reference/sdk/javascript/api/plug) singleton you may already be familiar with. Importing it from `croct-nanostores` registers the `auto-refresh-atom` plugin definition. Adding `'auto-refresh-atom'` to the `plugins` array enables automatic content refresh when user behavior changes.
-
 ## Creating your first atom
 
 Use `croctContent` to create a reactive atom for a [slot](https://docs.croct.com/explanation/slot). You provide the slot ID and a fallback content object that matches the slot's schema:
