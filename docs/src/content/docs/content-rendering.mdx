@@ -85,7 +85,7 @@ Croct Nanostores is designed to never break your UI, even when things go wrong:
 
 ## Persistence
 
-By default, atoms persist their state to `localStorage`. This means that when a user returns to your site, they immediately see the last personalized content instead of the fallback — even before the new fetch completes.
+By default, atoms persist their state to `localStorage`. This means that when a user returns to your site, they immediately see the last personalized content instead of the fallback — even before the new fetch completes. Persistent atoms also synchronize across browser tabs, so a content update in one tab is reflected in all other tabs showing the same atom.
 
 The storage key follows the pattern `croct-nano|{slotId}`:
 
@@ -95,7 +95,7 @@ croct-nano|home-banner@1
 
 ### Opting out of persistence
 
-If you set the `timeout` option on the atom, persistence is disabled. The atom uses an ephemeral in-memory store instead, and every page load starts from the fallback content:
+Set the `sticky` option to `false` to disable persistence. The atom uses an ephemeral in-memory store instead, and every page load starts from the fallback content:
 
 ```ts
 import { croctContent } from 'croct-nanostores';
@@ -107,14 +107,10 @@ const flashSale = croctContent(
         discount: 0,
     },
     {
-        timeout: 3000, // 3-second fetch timeout, no persistence
+        sticky: false,
     },
 );
 ```
-
-:::note
-The `timeout` option controls how long the SDK waits for a fetch response before giving up. Setting any timeout value — even a generous one — switches the atom to ephemeral mode. If you want persistence with a timeout, this is a current limitation of the library.
-:::
 
 ## Auto-refresh
 

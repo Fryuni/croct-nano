@@ -100,7 +100,8 @@ Commonly used options include:
 
 | Option            | Type                             | Description                                                                                                                                                                       |
 | ----------------- | -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `timeout`         | `number`                         | Maximum time in milliseconds to wait for a response. Setting this also disables [localStorage persistence](/content-rendering#opting-out-of-persistence).                         |
+| `sticky`          | `boolean`                        | Whether to persist the atom's state in `localStorage`. Defaults to `true`. Set to `false` for [ephemeral atoms](/content-rendering#opting-out-of-persistence).                    |
+| `timeout`         | `number`                         | Maximum time in milliseconds to wait for a response.                                                                                                                              |
 | `preferredLocale` | `string \| ReadableAtom<string>` | The locale to use for content personalization (e.g., `'en-US'`). Can be a Nanostores atom for automatic refresh on locale changes.                                                |
 | `attributes`      | `object`                         | Custom attributes to pass to the personalization engine. Values at any nesting level can be Nanostores atoms — see [reactive attributes](/content-rendering#reactive-attributes). |
 
@@ -110,6 +111,7 @@ For the full list of supported options, see the [`croct.fetch()` reference](http
 const banner = croctContent('home-banner@1', fallback, {
     timeout: 5000,
     preferredLocale: 'pt-BR',
+    sticky: false,
 });
 ```
 

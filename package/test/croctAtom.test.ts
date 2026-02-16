@@ -206,7 +206,7 @@ describe('croctContent', () => {
 
         expect(atom.value).toEqual({ stage: 'loaded', content: loaded, metadata });
         expect(consoleError).toHaveBeenCalledWith(
-            expect.stringContaining('Error while refreshing Croct Atom for "home-banner@1"'),
+            expect.stringContaining('Error while refreshing Croct Slot "home-banner@1"'),
             expect.any(Error),
         );
         consoleError.mockRestore();
@@ -224,13 +224,13 @@ describe('croctContent', () => {
 
         expect(atom.value).toEqual({ stage: 'fallback', content: fallback });
         expect(consoleError).toHaveBeenCalledWith(
-            expect.stringContaining('Error while refreshing Croct Atom for "home-banner@1"'),
+            expect.stringContaining('Error while refreshing Croct Slot "home-banner@1"'),
             expect.any(Error),
         );
         consoleError.mockRestore();
     });
 
-    it('uses persistent storage when timeout is not set', async () => {
+    it('uses persistent storage by default (sticky: true)', async () => {
         const { croctContent } =
             await importFresh<typeof import('../src/croctAtom.js')>('../src/croctAtom.js');
         const fallback = { _component: null, title: 'Welcome' };
@@ -240,7 +240,7 @@ describe('croctContent', () => {
         expect(persistMocks.persistentAtom).toHaveBeenCalledWith(
             'croct-nano|home-banner@1',
             { stage: 'initial', content: fallback },
-            { encode: JSON.stringify, decode: JSON.parse },
+            { listen: true, encode: JSON.stringify, decode: JSON.parse },
         );
     });
 
@@ -264,12 +264,12 @@ describe('croctContent', () => {
         expect(atom.value).toEqual(persistedState);
     });
 
-    it('uses ephemeral storage when timeout is set', async () => {
+    it('uses ephemeral storage when sticky is false', async () => {
         const { croctContent } =
             await importFresh<typeof import('../src/croctAtom.js')>('../src/croctAtom.js');
         const fallback = { _component: null, title: 'Welcome' };
 
-        const atom = croctContent('home-banner@1', fallback, { timeout: 3000 });
+        const atom = croctContent('home-banner@1', fallback, { sticky: false });
 
         expect(persistMocks.persistentAtom).not.toHaveBeenCalled();
         expect(atom.value).toEqual({ stage: 'initial', content: fallback });
