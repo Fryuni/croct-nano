@@ -1,13 +1,11 @@
 import { defineConfig, envField } from 'astro/config';
 import starlight from '@astrojs/starlight';
-import liveCode from 'astro-live-code';
-
 import react from '@astrojs/react';
-
 import solidJs from '@astrojs/solid-js';
 import preact from '@astrojs/preact';
 import svelte from '@astrojs/svelte';
 import vue from '@astrojs/vue';
+import liveCode from 'astro-live-code';
 
 // https://astro.build/config
 export default defineConfig({

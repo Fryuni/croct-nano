@@ -4,6 +4,7 @@ description: Learn how to install and set up Croct Nanostores to deliver persona
 ---
 
 import { Tabs, TabItem } from '@astrojs/starlight/components';
+import AllPackageManagers from '../../components/AllPackageManagers.astro';
 
 Croct Nanostores bridges [Croct](https://croct.com)'s personalization engine with [Nanostores](https://github.com/nanostores/nanostores), giving you reactive, type-safe atoms that deliver personalized content to any UI framework.
 
@@ -23,33 +24,23 @@ Install the `croct-nanostores` package along with `@croct/plug` and the connecto
 
 <Tabs>
     <TabItem label="React">
-    ```sh
-    npm install croct-nanostores @croct/plug @nanostores/react
-    ```
+    <AllPackageManagers pkg="croct-nanostores @croct/plug @nanostores/react" />
     </TabItem>
 
     <TabItem label="Vue">
-    ```sh
-    npm install croct-nanostores @croct/plug @nanostores/vue
-    ```
+    <AllPackageManagers pkg="croct-nanostores @croct/plug @nanostores/vue" />
     </TabItem>
 
     <TabItem label="Solid">
-    ```sh
-    npm install croct-nanostores @croct/plug @nanostores/solid
-    ```
+    <AllPackageManagers pkg="croct-nanostores @croct/plug @nanostores/solid" />
     </TabItem>
 
     <TabItem label="Preact">
-    ```sh
-    npm install croct-nanostores @croct/plug @nanostores/preact
-    ```
+    <AllPackageManagers pkg="croct-nanostores @croct/plug @nanostores/preact" />
     </TabItem>
 
     <TabItem label="Svelte">
-    ```sh
-    npm install croct-nanostores @croct/plug
-    ```
+    <AllPackageManagers pkg="croct-nanostores @croct/plug" />
 
     :::note
     Svelte has built-in support for Nanostores through its `$store` syntax, so no additional connector package is needed.
@@ -200,9 +191,7 @@ Croct Nanostores fully supports the type system from the Croct SDK. When you use
 
 Run the Croct CLI to generate a type declaration file for your application's slots:
 
-```sh
-npx croct typegen
-```
+<AllPackageManagers type="dlx" pkg="croct@latest" args="install" />
 
 This produces a `.d.ts` file that augments the `@croct/plug/slot` module with your slot schemas. For example, a slot named `home-banner` with version `1` generates types like:
 
