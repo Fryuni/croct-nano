@@ -1,5 +1,6 @@
 import croct from '@croct/plug';
 import type { JsonValue } from '@croct/json';
+import type { ExternalTrackingEventPayload } from '@croct/plug/sdk/tracking';
 import type { ReadableAtom } from 'nanostores';
 import type { UnbindFn } from './common.js';
 
@@ -25,6 +26,31 @@ function accumulateAndSend(
 }
 
 /*#__PURE__*/
+function accumulateAndSendValue<T>(
+    sendFn: (value: T) => void,
+): (atom: ReadableAtom<T>, ignoreValue?: T) => UnbindFn {
+    let pendingValue: T | undefined;
+    let pendingTimer: ReturnType<typeof setTimeout> | undefined;
+    const send = () => {
+        const value = pendingValue;
+        pendingValue = undefined;
+
+        if (value !== undefined) {
+            sendFn(value);
+        }
+    };
+
+    return (atom, ignoreValue) =>
+        atom.subscribe(value => {
+            if (ignoreValue !== undefined && value === ignoreValue) return;
+
+            pendingValue = value;
+            clearTimeout(pendingTimer);
+            pendingTimer = setTimeout(send);
+        });
+}
+
+/*#__PURE__*/
 export const trackSessionField = accumulateAndSend(pairs => {
     const patch = croct.session.edit();
     for (const [path, value] of pairs) {
@@ -41,3 +67,17 @@ export const trackUserField = accumulateAndSend(pairs => {
     }
     patch.save();
 });
+
+type CartPayload = ExternalTrackingEventPayload<'cartModified'>['cart'];
+
+/*#__PURE__*/
+const sendCart = accumulateAndSendValue<CartPayload | null>(cart => {
+    if (cart === null) {
+        return;
+    }
+
+    croct.track('cartModified', { cart });
+});
+
+/*#__PURE__*/
+export const trackCart = (atom: ReadableAtom<CartPayload | null>): UnbindFn => sendCart(atom, null);

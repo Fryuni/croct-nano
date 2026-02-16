@@ -1,11 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { ReadableAtom } from 'nanostores';
+import { atom } from 'nanostores';
 
 const sessionEdit = vi.hoisted(() => vi.fn());
 const userEdit = vi.hoisted(() => vi.fn());
+const track = vi.hoisted(() => vi.fn());
 
 vi.mock('@croct/plug', () => ({
     default: {
+        track,
         session: {
             edit: sessionEdit,
         },
@@ -16,24 +18,7 @@ vi.mock('@croct/plug', () => ({
 }));
 
 const createReadableAtom = <T>(initial: T) => {
-    let value = initial;
-    const listeners = new Set<(next: T) => void>();
-
-    return {
-        subscribe: (listener: (next: T) => void) => {
-            listeners.add(listener);
-            listener(value);
-            return () => {
-                listeners.delete(listener);
-            };
-        },
-        set: (next: T) => {
-            value = next;
-            for (const listener of listeners) {
-                listener(value);
-            }
-        },
-    } satisfies ReadableAtom<T> & { set: (next: T) => void };
+    return atom(initial);
 };
 
 async function flushTimers() {
@@ -47,6 +32,7 @@ describe('auto patching', () => {
         vi.useFakeTimers();
         sessionEdit.mockReset();
         userEdit.mockReset();
+        track.mockReset();
     });
 
     afterEach(() => {
@@ -133,5 +119,197 @@ describe('auto patching', () => {
         expect(userEdit).toHaveBeenCalledTimes(1);
         expect(patch.set).toHaveBeenCalledWith('profile.name', 'Luiz');
         expect(patch.save).toHaveBeenCalledTimes(1);
+    });
+
+    it('tracks cart updates with cartModified', async () => {
+        const { trackCart } = await import('../src/autoPatching.js');
+        const cart = createReadableAtom({
+            currency: 'USD',
+            total: 899.99,
+            items: [
+                {
+                    index: 0,
+                    quantity: 1,
+                    total: 899.99,
+                    product: {
+                        productId: '12345',
+                        name: 'Black iPhone 12',
+                        displayPrice: 899.99,
+                    },
+                },
+            ],
+        });
+
+        trackCart(cart);
+
+        await flushTimers();
+
+        expect(track).toHaveBeenCalledTimes(1);
+        expect(track).toHaveBeenCalledWith('cartModified', {
+            cart: {
+                currency: 'USD',
+                total: 899.99,
+                items: [
+                    {
+                        index: 0,
+                        quantity: 1,
+                        total: 899.99,
+                        product: {
+                            productId: '12345',
+                            name: 'Black iPhone 12',
+                            displayPrice: 899.99,
+                        },
+                    },
+                ],
+            },
+        });
+    });
+
+    it('uses latest cart state for repeated updates', async () => {
+        const { trackCart } = await import('../src/autoPatching.js');
+        const cart = createReadableAtom({
+            currency: 'USD',
+            total: 100,
+            items: [
+                {
+                    index: 0,
+                    quantity: 1,
+                    total: 100,
+                    product: {
+                        productId: 'sku-1',
+                        name: 'Item',
+                        displayPrice: 100,
+                    },
+                },
+            ],
+        });
+
+        trackCart(cart);
+
+        await flushTimers();
+        track.mockClear();
+
+        cart.set({
+            currency: 'USD',
+            total: 115,
+            items: [
+                {
+                    index: 0,
+                    quantity: 1,
+                    total: 115,
+                    product: {
+                        productId: 'sku-1',
+                        name: 'Item',
+                        displayPrice: 115,
+                    },
+                },
+            ],
+        });
+
+        cart.set({
+            currency: 'USD',
+            total: 120,
+            items: [
+                {
+                    index: 0,
+                    quantity: 1,
+                    total: 120,
+                    product: {
+                        productId: 'sku-1',
+                        name: 'Item',
+                        displayPrice: 120,
+                    },
+                },
+            ],
+        });
+
+        await flushTimers();
+
+        expect(track).toHaveBeenCalledTimes(1);
+        expect(track).toHaveBeenCalledWith('cartModified', {
+            cart: {
+                currency: 'USD',
+                total: 120,
+                items: [
+                    {
+                        index: 0,
+                        quantity: 1,
+                        total: 120,
+                        product: {
+                            productId: 'sku-1',
+                            name: 'Item',
+                            displayPrice: 120,
+                        },
+                    },
+                ],
+            },
+        });
+    });
+
+    it('stops cart tracking when unsubscribed', async () => {
+        const { trackCart } = await import('../src/autoPatching.js');
+        const cart = createReadableAtom({
+            currency: 'USD',
+            total: 100,
+            items: [
+                {
+                    index: 0,
+                    quantity: 1,
+                    total: 100,
+                    product: {
+                        productId: 'sku-1',
+                        name: 'Item',
+                        displayPrice: 100,
+                    },
+                },
+            ],
+        });
+
+        const unsubscribe = trackCart(cart);
+
+        await flushTimers();
+        track.mockClear();
+
+        unsubscribe();
+        cart.set({
+            currency: 'USD',
+            total: 200,
+            items: [
+                {
+                    index: 0,
+                    quantity: 2,
+                    total: 200,
+                    product: {
+                        productId: 'sku-1',
+                        name: 'Item',
+                        displayPrice: 100,
+                    },
+                },
+            ],
+        });
+
+        await flushTimers();
+
+        expect(track).not.toHaveBeenCalled();
+    });
+
+    it('ignores null cart values', async () => {
+        const { trackCart } = await import('../src/autoPatching.js');
+        const cart = createReadableAtom<{
+            currency: string;
+            total: number;
+            items: {
+                index: number;
+                quantity: number;
+                total: number;
+                product: { productId: string; name: string; displayPrice: number };
+            }[];
+        } | null>(null);
+
+        trackCart(cart);
+
+        await flushTimers();
+
+        expect(track).not.toHaveBeenCalled();
     });
 });

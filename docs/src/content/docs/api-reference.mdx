@@ -3,12 +3,13 @@ title: API reference
 description: Complete reference for the Croct Nanostores public API — functions, types, and options.
 ---
 
-Croct Nanostores exports five members from the `croct-nanostores` package:
+Croct Nanostores exports six members from the `croct-nanostores` package:
 
 ```ts
 import {
     croct,
     croctContent,
+    trackCart,
     trackSessionField,
     trackUserField,
     type CroctAtom,
@@ -307,6 +308,61 @@ const stop = trackUserField('account.plan', $plan);
 // Later, when you no longer want to sync
 stop();
 ```
+
+## `trackCart`
+
+Connects a Nanostores atom to Croct cart tracking. When the atom updates, the latest cart snapshot is sent through the `cartModified` event.
+
+### Signature
+
+```ts
+function trackCart(atom: ReadableAtom<Cart | null>): UnbindFn;
+```
+
+### Parameters
+
+#### `atom`
+
+**Type:** `ReadableAtom<Cart | null>`
+
+The Nanostores atom containing the full current cart state. When the atom value is `null`, no event is tracked.
+
+### Return value
+
+Returns an `UnbindFn` that stops the synchronization when called.
+
+### Example
+
+```ts
+import { atom } from 'nanostores';
+import { trackCart } from 'croct-nanostores';
+
+const $cart = atom({
+    currency: 'USD',
+    total: 99,
+    items: [
+        {
+            index: 0,
+            quantity: 1,
+            total: 99,
+            product: {
+                productId: 'sku-1',
+                name: 'Starter pack',
+                displayPrice: 99,
+            },
+        },
+    ],
+});
+
+const stop = trackCart($cart);
+
+// Later, when you no longer want to sync
+stop();
+```
+
+:::tip
+Your cart atom can be a `computed` store that maps your app's internal cart shape into Croct's cart payload shape. This is useful when your domain model differs from Croct's event schema.
+:::
 
 ## `State`
 
