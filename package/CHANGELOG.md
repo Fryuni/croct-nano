@@ -1,5 +1,11 @@
 # croct-nanostores
 
+## 1.0.1
+
+### Patch Changes
+
+- 844e030: Fixes content fetching error when passing `undefined` as the context attributes map.
+
 ## 1.0.0
 
 ### Major Changes
