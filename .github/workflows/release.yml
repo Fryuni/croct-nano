@@ -4,12 +4,6 @@ on:
     push:
         branches:
             - main
-    pull_request:
-        types:
-            - opened
-            - reopened
-            - synchronize
-            - labeled
 
 defaults:
     run:
@@ -22,7 +16,6 @@ jobs:
     changelog:
         name: Changelog PR or Release
         runs-on: ubuntu-latest
-        if: ${{ github.event_name == 'push' || contains(github.event.pull_request.labels.*.name, 'preview') }}
         permissions:
             contents: write
             id-token: write
@@ -33,9 +26,9 @@ jobs:
               uses: actions/cache@v4
               with:
                   path: .turbo
-                  key: ${{ runner.os }}-${{ matrix.NODE_VERSION }}-turbo-${{ github.sha }}
+                  key: ${{ runner.os }}-turbo-${{ github.sha }}
                   restore-keys: |
-                      ${{ runner.os }}-${{ matrix.NODE_VERSION }}-turbo-
+                      ${{ runner.os }}-turbo-
 
             - name: Setup Bun
               uses: oven-sh/setup-bun@v2
@@ -45,6 +38,9 @@ jobs:
               with:
                   node-version: 22
                   registry-url: 'https://registry.npmjs.org'
+
+            - name: Update npm for trusted publishing
+              run: npm install -g npm@latest
 
             - name: Cache Bun dependencies
               uses: actions/cache@v4
@@ -57,16 +53,8 @@ jobs:
             - name: Install dependencies
               run: bun install --frozen-lockfile
 
-            - name: Publish preview
-              if: ${{ contains(github.event.pull_request.labels.*.name, 'preview') }}
-              run: bun run cut-release
-              env:
-                  # Use Node auth from above
-                  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
             - name: Create Release Pull Request or Publish
               id: changesets
-              if: ${{ github.event_name == 'push' }}
               uses: changesets/action@v1
               with:
                   # Note: bun install after versioning is necessary to refresh lockfile
