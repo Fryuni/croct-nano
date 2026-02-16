@@ -1,10 +1,10 @@
 import type { FetchOptions, FetchResponse } from '@croct/plug/plug';
 import type { SlotContent, VersionedSlotId } from '@croct/plug/slot';
 import type { JsonObject } from '@croct/json';
-import croct from '@croct/plug';
 import { persistentAtom } from '@nanostores/persistent';
 import { atom, onMount, task, type ReadableAtom, type WritableAtom } from 'nanostores';
 import { resolvedAtom } from '@inox-tools/utils/nano';
+import { croct } from './common.js';
 
 type SlotMetadata = NonNullable<FetchResponse<any>['metadata']>;
 

@@ -1,8 +1,8 @@
-import croct from '@croct/plug';
 import type { JsonValue } from '@croct/json';
 import type { ExternalTrackingEventPayload } from '@croct/plug/sdk/tracking';
 import type { ReadableAtom } from 'nanostores';
 import type { UnbindFn } from './common.js';
+import { croct } from './common.js';
 
 /*#__PURE__*/
 function accumulateAndSend(
