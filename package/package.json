@@ -64,7 +64,7 @@
         "typescript": "^5.8.3"
     },
     "peerDependencies": {
-        "@croct/plug": "^0.21.0",
+        "@croct/plug": ">=0.21.0 <0.22.0",
         "@nanostores/preact": "^1.0.0",
         "@nanostores/react": "^1.0.0",
         "@nanostores/solid": "^1.1.1",
