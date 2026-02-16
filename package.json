@@ -20,12 +20,10 @@
     "scripts": {
         "build": "turbo run --filter croct-nanostores build",
         "dev": "turbo run --filter croct-nanostores dev",
-        "build:examples": "turbo run --filter '@example/*' build",
         "docs:build": "turbo run --filter docs build",
         "docs:dev": "turbo run --filter docs dev",
         "format": "prettier -w \"**/*\" --ignore-unknown --cache",
         "test": "turbo run --concurrency=1 --filter croct-nanostores test",
-        "test:e2e": "turbo run --concurrency=1 --filter croct-nanostores test:e2e",
         "version": "changeset version && bun install && bun run format",
         "cut-release": "bun run build && changeset publish"
     },
