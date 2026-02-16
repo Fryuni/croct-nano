@@ -57,14 +57,14 @@ export function croctContent<P extends JsonObject, const I extends VersionedSlot
     delete (baseAtom as Partial<WritableAtom<State<I, P>>>).set;
     const $options = resolvedAtom({
         preferredLocale: options.preferredLocale,
-        attributes: options.attributes,
+        attributes: options.attributes || {},
     });
 
-    let lastOptions: JsonObject;
+    let lastAttrs: JsonObject;
     const refresh = () =>
         task(async () => {
             const attrs = $options.get();
-            if (attrs === lastOptions) return;
+            if (attrs === lastAttrs) return;
             try {
                 const { content, metadata } = await croct.fetch(slotId, {
                     ...options,
@@ -87,7 +87,7 @@ export function croctContent<P extends JsonObject, const I extends VersionedSlot
 
     const croctAtom: InnerCroctAtom<P, I> = Object.assign(baseAtom, {
         refresh: () => {
-            lastOptions = {};
+            lastAttrs = {};
             return refresh();
         },
     });
