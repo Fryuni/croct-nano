@@ -45,14 +45,14 @@ export function croctContent<P extends JsonObject, const I extends VersionedSlot
 ): CroctAtom<P, I> {
     const baseAtom = s
         ? persistentAtom<State<I, P>>(
-            `croct-nano|${slotId}`,
-            { stage: 'initial', content: fallbackContent as P },
-            {
-                listen: true,
-                encode: JSON.stringify,
-                decode: JSON.parse,
-            },
-        )
+              `croct-nano|${slotId}`,
+              { stage: 'initial', content: fallbackContent as P },
+              {
+                  listen: true,
+                  encode: JSON.stringify,
+                  decode: JSON.parse,
+              },
+          )
         : atom<State<I, P>>({ stage: 'initial', content: fallbackContent as P });
     const $options = resolvedAtom({ attributes: a, preferredLocale: p });
 
