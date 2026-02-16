@@ -155,7 +155,7 @@ describe('croctContent', () => {
         await atom.refresh();
 
         expect(croctFetch).toHaveBeenCalledWith('home-banner@1', {
-            attributes: undefined,
+            attributes: {},
             preferredLocale: undefined,
         });
         expect(atom.value).toEqual({ stage: 'loaded', content: loaded, metadata });
