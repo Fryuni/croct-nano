@@ -296,7 +296,6 @@ describe('auto-refresh plugin', () => {
         const pluginFactory = croctExtend.mock.calls[0]?.[1] as
             | ((args: { sdk: { tracker: { addListener: (listener: Function) => void } } }) => {
                   enable: () => void;
-                  disable: () => void;
               })
             | undefined;
 
@@ -308,10 +307,10 @@ describe('auto-refresh plugin', () => {
 
         expect(plugin).toBeDefined();
         expect(() => plugin?.enable()).not.toThrow();
-        expect(() => plugin?.disable()).not.toThrow();
+        expect(plugin?.disable).toBeUndefined();
     });
 
-    it('refreshes active atoms in a three-step cascade', async () => {
+    it('refreshes active atoms in a repeated cadence', async () => {
         const fallback = { _component: null, title: 'Welcome' };
         croctFetch.mockResolvedValue({
             content: fallback,
@@ -327,20 +326,26 @@ describe('auto-refresh plugin', () => {
 
         tracker.emit('userSignedIn');
 
-        await advanceTimers(500);
+        await advanceTimers(499);
+        expect(refreshSpy).not.toHaveBeenCalled();
+
+        await advanceTimers(1);
         expect(refreshSpy).toHaveBeenCalledTimes(1);
 
-        await advanceTimers(1000);
+        await advanceTimers(500);
         expect(refreshSpy).toHaveBeenCalledTimes(2);
 
-        await advanceTimers(1500);
-        expect(refreshSpy).toHaveBeenCalledTimes(3);
+        await advanceTimers(4000);
+        expect(refreshSpy).toHaveBeenCalledTimes(10);
+
+        await advanceTimers(500);
+        expect(refreshSpy).toHaveBeenCalledTimes(11);
 
         unsubscribe();
         refreshSpy.mockRestore();
     });
 
-    it('debounces refresh cascades when events repeat quickly', async () => {
+    it('debounces refresh runs when events repeat quickly', async () => {
         const fallback = { _component: null, title: 'Welcome' };
         croctFetch.mockResolvedValue({
             content: fallback,
@@ -364,11 +369,11 @@ describe('auto-refresh plugin', () => {
         await advanceTimers(1);
         expect(refreshSpy).toHaveBeenCalledTimes(1);
 
-        await advanceTimers(1000);
+        await advanceTimers(500);
         expect(refreshSpy).toHaveBeenCalledTimes(2);
 
-        await advanceTimers(1500);
-        expect(refreshSpy).toHaveBeenCalledTimes(3);
+        await advanceTimers(4500);
+        expect(refreshSpy).toHaveBeenCalledTimes(11);
 
         unsubscribe();
         refreshSpy.mockRestore();
