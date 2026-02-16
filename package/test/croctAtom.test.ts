@@ -195,6 +195,7 @@ describe('croctContent', () => {
         const fallback = { _component: null, title: 'Welcome' };
         const loaded = { _component: null, title: 'Hola' };
         const metadata = { experimentId: 'exp-1', version: '1' };
+        const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
 
         croctFetch.mockResolvedValueOnce({ content: loaded, metadata });
         const atom = croctContent('home-banner@1', fallback);
@@ -204,18 +205,29 @@ describe('croctContent', () => {
         await atom.refresh();
 
         expect(atom.value).toEqual({ stage: 'loaded', content: loaded, metadata });
+        expect(consoleError).toHaveBeenCalledWith(
+            expect.stringContaining('Error while refreshing Croct Atom for "home-banner@1"'),
+            expect.any(Error),
+        );
+        consoleError.mockRestore();
     });
 
     it('moves to fallback when refresh fails before any load', async () => {
         const { croctContent } =
             await importFresh<typeof import('../src/croctAtom.js')>('../src/croctAtom.js');
         const fallback = { _component: null, title: 'Welcome' };
+        const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
 
         croctFetch.mockRejectedValueOnce(new Error('boom'));
         const atom = croctContent('home-banner@1', fallback);
         await atom.refresh();
 
         expect(atom.value).toEqual({ stage: 'fallback', content: fallback });
+        expect(consoleError).toHaveBeenCalledWith(
+            expect.stringContaining('Error while refreshing Croct Atom for "home-banner@1"'),
+            expect.any(Error),
+        );
+        consoleError.mockRestore();
     });
 
     it('uses persistent storage when timeout is not set', async () => {
@@ -278,6 +290,25 @@ describe('auto-refresh plugin', () => {
 
     it('registers auto-refresh plugin on import', async () => {
         expect(croctExtend).toHaveBeenCalledWith('auto-refresh-atom', expect.any(Function));
+    });
+
+    it('exposes no-op plugin lifecycle methods', async () => {
+        const pluginFactory = croctExtend.mock.calls[0]?.[1] as
+            | ((args: { sdk: { tracker: { addListener: (listener: Function) => void } } }) => {
+                  enable: () => void;
+                  disable: () => void;
+              })
+            | undefined;
+
+        const tracker = {
+            addListener: (_listener: Function) => undefined,
+        };
+
+        const plugin = pluginFactory?.({ sdk: { tracker } });
+
+        expect(plugin).toBeDefined();
+        expect(() => plugin?.enable()).not.toThrow();
+        expect(() => plugin?.disable()).not.toThrow();
     });
 
     it('refreshes active atoms in a three-step cascade', async () => {
