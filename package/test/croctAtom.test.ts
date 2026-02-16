@@ -119,7 +119,10 @@ describe('croctContent', () => {
         const atom = croctContent('home-banner@1', fallback);
         await atom.refresh();
 
-        expect(croctFetch).toHaveBeenCalledWith('home-banner@1', undefined);
+        expect(croctFetch).toHaveBeenCalledWith('home-banner@1', {
+            attributes: undefined,
+            preferredLocale: undefined,
+        });
         expect(atom.value).toEqual({ stage: 'loaded', content: loaded, metadata });
     });
 

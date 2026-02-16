@@ -3,10 +3,16 @@ title: API reference
 description: Complete reference for the Croct Nanostores public API — functions, types, and options.
 ---
 
-Croct Nanostores exports three members from the `croct-nanostores` package:
+Croct Nanostores exports five members from the `croct-nanostores` package:
 
 ```ts
-import { croct, croctContent, type CroctAtom } from 'croct-nanostores';
+import {
+    croct,
+    croctContent,
+    trackSessionField,
+    trackUserField,
+    type CroctAtom,
+} from 'croct-nanostores';
 ```
 
 ## `croct`
@@ -218,6 +224,88 @@ const state = useStore(bannerContent);
 
 // Svelte
 $bannerContent.content.title;
+```
+
+## `trackSessionField`
+
+Connects a Nanostores atom to a Croct session field. When the atom updates, the new value is batched and sent to Croct through `croct.session.edit()`. Multiple tracked fields are collapsed into a single patch per tick.
+
+### Signature
+
+```ts
+function trackSessionField(path: string, atom: ReadableAtom<JsonValue>): UnbindFn;
+```
+
+### Parameters
+
+#### `path`
+
+**Type:** `string`
+
+The Croct session field path to update. Use dot notation for nested fields.
+
+#### `atom`
+
+**Type:** `ReadableAtom<JsonValue>`
+
+The Nanostores atom whose value should be pushed to the session field.
+
+### Return value
+
+Returns an `UnbindFn` that stops the synchronization when called.
+
+### Example
+
+```ts
+import { atom } from 'nanostores';
+import { trackSessionField } from 'croct-nanostores';
+
+const $currency = atom('USD');
+const stop = trackSessionField('preferences.currency', $currency);
+
+// Later, when you no longer want to sync
+stop();
+```
+
+## `trackUserField`
+
+Connects a Nanostores atom to a Croct user field. Updates are batched and sent to Croct through `croct.user.edit()`.
+
+### Signature
+
+```ts
+function trackUserField(path: string, atom: ReadableAtom<JsonValue>): UnbindFn;
+```
+
+### Parameters
+
+#### `path`
+
+**Type:** `string`
+
+The Croct user field path to update. Use dot notation for nested fields.
+
+#### `atom`
+
+**Type:** `ReadableAtom<JsonValue>`
+
+The Nanostores atom whose value should be pushed to the user field.
+
+### Return value
+
+Returns an `UnbindFn` that stops the synchronization when called.
+
+### Example
+
+```ts
+import { atom } from 'nanostores';
+import { trackUserField } from 'croct-nanostores';
+
+const $plan = atom('pro');
+const stop = trackUserField('account.plan', $plan);
+
+// Later, when you no longer want to sync
+stop();
 ```
 
 ## `State`

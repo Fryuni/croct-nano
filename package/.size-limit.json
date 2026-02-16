@@ -2,19 +2,31 @@
     {
         "name": "Full with all deps",
         "path": "dist/index.js",
-        "import": "{ croctContent }",
+        "import": "*",
         "ignore": []
     },
     {
         "name": "Already using Croct",
         "path": "dist/index.js",
-        "import": "{ croctContent }",
+        "import": "*",
         "ignore": ["@croct/plug"]
     },
     {
         "name": "Already using Nanostores",
         "path": "dist/index.js",
+        "import": "*",
+        "ignore": ["@croct/plug", "nanostores", "@nanostores/persistent"]
+    },
+    {
+        "name": "Content only",
+        "path": "dist/index.js",
         "import": "{ croctContent }",
+        "ignore": ["@croct/plug", "nanostores", "@nanostores/persistent"]
+    },
+    {
+        "name": "Tracking only",
+        "path": "dist/index.js",
+        "import": "{ trackSessionField, trackUserField }",
         "ignore": ["@croct/plug", "nanostores", "@nanostores/persistent"]
     }
 ]
