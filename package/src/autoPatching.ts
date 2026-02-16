@@ -6,7 +6,7 @@ import type { UnbindFn } from './common.js';
 /*#__PURE__*/
 function accumulateAndSend(
     sendFn: (pairs: [string, JsonValue][]) => void,
-): (path: string, atom: ReadableAtom<JsonValue>) => UnbindFn {
+): (path: string, atom: ReadableAtom<JsonValue>, ignoreValue?: JsonValue) => UnbindFn {
     const pendingPairs = new Map<string, JsonValue>();
     let pendingTimer: ReturnType<typeof setTimeout> | undefined;
     const send = () => {
@@ -14,8 +14,9 @@ function accumulateAndSend(
         pendingPairs.clear();
         sendFn(entries);
     };
-    return (path, atom) =>
+    return (path, atom, ignoreValue) =>
         atom.subscribe(value => {
+            if (ignoreValue !== undefined && value === ignoreValue) return;
             // Cast to remove the read-only marker.
             pendingPairs.set(path, value as JsonValue);
             clearTimeout(pendingTimer);
