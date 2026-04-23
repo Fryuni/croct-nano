@@ -44,6 +44,8 @@ const createAtom = (initial: unknown) => {
     const listeners = new Set<() => void>();
     let unmount: (() => void) | undefined;
     const store = {
+        init: initial,
+        lc: 0,
         value: initial,
         set: (value: unknown) => {
             store.value = value;

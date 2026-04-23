@@ -14,7 +14,7 @@ const refreshEvents: TrackingEventType[] = [
     'eventOccurred',
 ];
 
-let pendingTimer: NodeJS.Timeout | undefined;
+let pendingTimer: ReturnType<typeof setTimeout> | undefined;
 let run = (counter: number = 10) => {
     refreshActive();
     if (counter > 0) {

@@ -9,6 +9,7 @@ const createStore = <T>(initial: T) => {
 
     const store = {
         lc: 0,
+        init: initial,
         value,
         notify: () => undefined,
         off: () => undefined,
