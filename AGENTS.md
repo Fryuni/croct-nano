@@ -1,122 +1,259 @@
-# PROJECT KNOWLEDGE BASE
+# Repository Guidelines
 
-**Generated:** 2026-02-09
-**Commit:** de5af9c
-**Branch:** main
+Unofficial Nanostores bindings for [Croct](https://croct.com) personalized content. ~130 lines of TypeScript that creates reactive atoms with optional auto-refresh on user behavior events. Framework-agnostic core with optional React/Vue/Solid/Preact/Svelte peer dependencies.
 
-## OVERVIEW
+## Project Overview
 
-Unofficial Nanostores bindings for [Croct](https://croct.com) personalized content. ~130 lines of TypeScript library code that creates reactive atoms with optional auto-refresh on user behavior events. Framework-agnostic core with `@croct/plug` as a peer dependency and optional React/Vue/Solid/Preact/Svelte peer deps.
+**Purpose**: Bridge Croct's personalization SDK with Nanostores state management. Provides `croctContent()` factory for creating reactive atoms that fetch slot content, persist to localStorage, and auto-refresh when user interests/attributes change.
 
-## STRUCTURE
+**Key Features**:
+- Reactive atoms with `initial` → `loaded`/`fallback` state machine
+- Optional localStorage persistence (`sticky` option, default true)
+- Auto-refresh on user events (sign-in, profile changes, cart updates)
+- Framework bindings via optional peer dependencies
+
+**Published Package**: `croct-nanostores` v1.1.0
+
+## Architecture & Data Flow
+
+### Core Modules
+
+| File | Responsibility | Key Exports |
+|------|----------------|-------------|
+| `package/src/index.ts` | Public API barrel | `croct`, `croctContent`, `CroctAtom`, tracking functions |
+| `package/src/croctAtom.ts` | Atom factory & state machine | `croctContent()`, `CroctAtom` type, `refreshActive()` |
+| `package/src/croctPlugin.ts` | Event-driven refresh orchestration | Side-effect: registers `auto-refresh-atom` plugin |
+| `package/src/autoPatching.ts` | Batched tracking integration | `trackSessionField()`, `trackUserField()`, `trackCart()` |
+| `package/src/common.ts` | Shared SDK instance | `croct` (from `@croct/plug`), `UnbindFn` type |
+
+### State Machine
+
+```
+State<I, P> =
+  | { stage: 'initial' | 'fallback'; content: P; metadata?: never }
+  | { stage: 'loaded'; content: SlotContent<I, P>; metadata: SlotMetadata }
+```
+
+Atoms start in `initial` with fallback content, transition to `loaded` on successful fetch, or `fallback` on error (unless already loaded).
+
+### Data Flow
+
+1. **Creation**: `croctContent(slotId, fallback, options)` creates atom with persistent/base store
+2. **Mount**: `onMount` registers atom in `activeAtoms` Set, subscribes to options changes
+3. **Fetch**: On options change or manual `refresh()`, fetches from Croct SDK
+4. **Update**: Updates atom state with content + metadata
+5. **Auto-refresh**: Plugin listens to tracking events → debounced `refreshActive()` cascade
+
+### Auto-Refresh Behavior
+
+The `auto-refresh-atom` plugin (registered via `croct.extend()` side-effect) listens to:
+`userSignedIn`, `userSignedUp`, `userSignedOut`, `userProfileChanged`, `sessionAttributesChanged`, `orderPlaced`, `cartModified`, `interestShown`, `eventOccurred`
+
+**Triple-cascade debounce**: Events trigger refresh at 500ms intervals up to 10 times (5 second window), not a single debounce. Clears and restarts on subsequent events.
+
+## Key Directories
 
 ```
 .
-├── package/              # Library source (published as `croct-nanostores`)
-│   ├── src/
-│   │   ├── index.ts          # Barrel + side-effect import of croctPlugin
-│   │   ├── croctAtom.ts      # croctContent() factory, CroctAtom type, state machine, active atom registry
-│   │   └── croctPlugin.ts    # Registers auto-refresh-atom plugin via croct.extend(), event-driven refresh
-│   ├── test/                 # Vitest setup only (no test files yet)
-│   └── dist/                 # Built ESM output
-├── docs/                 # Astro + Starlight documentation site with live code demos
-├── patches/              # Bun patch for astro-live-code
-└── .github/workflows/    # CI, release, size-limit, snapshot, todo-tracking
+├── package/              # Published library
+│   ├── src/              # Source (5 TypeScript files)
+│   ├── test/             # Tests (bun:test + jest-extended)
+│   └── dist/             # Build output (ESM + .d.ts)
+├── docs/                 # Astro + Starlight documentation
+│   ├── src/content/docs/ # MDX documentation pages
+│   └── src/stores/       # Demo stores using library
+├── examples/             # Example projects (workspace)
+├── .github/workflows/    # CI, release, size-limit, snapshots
+└── patches/              # Bun patches (astro-live-code)
 ```
 
-## WHERE TO LOOK
+## Development Commands
 
-| Task                 | Location                        | Notes                                                            |
-| -------------------- | ------------------------------- | ---------------------------------------------------------------- |
-| Core atom logic      | `package/src/croctAtom.ts`      | State machine, active atom registry, `refreshActive()`           |
-| Event-driven refresh | `package/src/croctPlugin.ts`    | Registers `auto-refresh-atom` plugin, debounced cascade          |
-| Public API surface   | `package/src/index.ts`          | 3 exports: `croct`, `croctContent`, `CroctAtom`                  |
-| Build config         | `package/build.ts`              | Bun.build() ESM-only, tree-shake smallest, minified              |
-| Bundle size tracking | `package/.size-limit.json`      | 3 scenarios: full, already-using-croct, already-using-nanostores |
-| Release workflow     | `.changeset/config.json`        | Changesets-based, public access                                  |
-| Docs live examples   | `docs/src/stores/croct.ts`      | Real usage with slot content + user interests                    |
-| Croct SDK init       | `docs/src/utils/croctClient.ts` | Client-side bootstrap pattern                                    |
-
-## CODE MAP
-
-| Symbol            | Type        | Location            | Role                                                 |
-| ----------------- | ----------- | ------------------- | ---------------------------------------------------- |
-| `croctContent()`  | Factory fn  | `croctAtom.ts:30`   | Creates reactive atom for a Croct slot with fallback |
-| `CroctAtom<P,I>`  | Type        | `croctAtom.ts:14`   | `ReadableAtom<State> & { refresh() }`                |
-| `State<I,P>`      | Union type  | `croctAtom.ts:10`   | `'initial' \| 'fallback' \| 'loaded'` tagged union   |
-| `croct.extend()`  | Side-effect | `croctPlugin.ts:19` | Registers `auto-refresh-atom` plugin definition      |
-| `activeAtoms`     | Set         | `croctAtom.ts:28`   | Module-level registry of mounted atoms               |
-| `refreshActive()` | Function    | `croctAtom.ts:83`   | Bulk-refresh all active atoms                        |
-
-## CONVENTIONS
-
-- **ESM-only** — no CommonJS. `"type": "module"` everywhere
-- **Prettier** — 100 char width, 4 spaces, single quotes, trailing commas all, `arrowParens: avoid`
-- **TypeScript strict** — all strict flags ON: `noImplicitAny`, `noUnusedLocals`, `noUnusedParameters`, `strictNullChecks`, `noImplicitReturns`, `verbatimModuleSyntax`
-- **No ESLint** — relies on TS strictness + Prettier format check only
-- **Self-documenting** — zero inline comments in source; code should speak for itself
-- **Bun 1.3.9+** with workspaces, Turbo orchestration
-- **Node 22** baseline (CI)
-- **Changesets** for versioning — run `bunx changeset` before PRing version bumps
-- **TODO tracking** — GitHub Action auto-creates issues from TODO comments; don't leave orphan TODOs
-
-## ANTI-PATTERNS (THIS PROJECT)
-
-- **No `as any` in new code** — existing `as any` casts in library source are intentional for Nanostores internal type widening
-- **No test files exist yet** — test infrastructure is ready (Vitest + jest-extended) but tests haven't been written
-- **`croct.extend()` called as module side-effect** — importing the library registers the `auto-refresh-atom` plugin definition. Consumers must still opt in by adding `'auto-refresh-atom'` to `plugins` in `croct.plug()`
-
-## UNIQUE STYLES
-
-- **Persistent by default** — atoms use localStorage (`croct-nano|{slotId}` key) unless `timeout` option is set, then ephemeral
-- **Triple-cascade debounce** — refresh on domain events fires 3 times at 500ms/1000ms/1500ms intervals (not a single debounce)
-- **Plugin registration via `croct.extend()`** — `croctPlugin.ts` registers the `auto-refresh-atom` plugin definition as a side-effect import; consumers opt in by adding `'auto-refresh-atom'` to `plugins` in `croct.plug()`
-- **Framework-agnostic via peer deps** — `@nanostores/react`, `/vue`, `/solid`, `/preact` all optional
-- **Docs as workspace member** — Astro site uses `croct-nanostores: "workspace:"` for live integration testing
-- **Multi-framework docs** — Astro config uses file-based framework routing: `*.react.*`, `*.preact.*`, `*.solid.*`
-
-## COMMANDS
+### Root-level (monorepo orchestration)
 
 ```bash
-# Install
+# Install dependencies
 bun install
 
-# Build library
+# Build library only
 bun run build
 
-# Dev (watch mode)
+# Dev watch mode (library)
 bun run dev
 
-# Test (coverage)
-bun test
+# Run tests (serial, no concurrency)
+bun run test
 
-# Format (write)
+# Format all files (Prettier, write mode)
 bun run format
 
-# Format check (CI)
-bun run format --check
-
-# Docs dev
+# Docs development
 bun run docs:dev
 
 # Docs build
 bun run docs:build
 
-# Size analysis
-cd package && bunx size-limit
-
-# Version bump
-bunx changeset
+# Version bump (changeset + install + format)
 bun run version
 
-# Release
+# Publish release (build + changeset publish)
 bun run cut-release
 ```
 
-## NOTES
+### Package-level (`cd package`)
 
-- **Turbo caching** — build inputs exclude `tests/` and `e2e/` dirs; test task has cache disabled
-- **Test concurrency disabled** — root scripts use `--concurrency=1` for test tasks
-- **Snapshot releases** — PR comment `/snapshot <name>` triggers snapshot publish via CI
-- **Size-limit** enforced on PRs via `@size-limit/preset-small-lib`
-- **Domain events triggering refresh**: `userSignedIn/Out/Up`, `userProfileChanged`, `sessionAttributesChanged`, `orderPlaced`, `cartModified`, `interestShown`, `eventOccurred`
+```bash
+# Build (Bun.build + tsc declarations)
+bun run build
+
+# Dev watch
+bun run dev
+
+# Test with coverage
+bun test --coverage
+
+# Test watch mode
+bun run test:dev
+
+# Analyze bundle size
+bun run size
+
+# Prepack (build + copy README)
+bun run prepack
+```
+
+## Code Conventions & Common Patterns
+
+### Language & Module System
+- **ESM-only**: `"type": "module"` in all package.json files
+- **No CommonJS**: No `.cjs` output, no `require()`
+- **TypeScript strict**: All strict flags enabled (`noImplicitAny`, `strictNullChecks`, `noUnusedLocals`, `noUnusedParameters`, `verbatimModuleSyntax`)
+
+### Formatting (Prettier)
+Config: `prettier.config.js`
+
+```javascript
+{
+    printWidth: 100,
+    semi: true,
+    singleQuote: true,
+    tabWidth: 4,
+    trailingComma: 'all',
+    arrowParens: 'avoid',
+    useTabs: false
+}
+```
+
+- No ESLint: relies on TS strictness + Prettier only
+- Self-documenting code: zero inline comments in source
+
+### Naming & Patterns
+- **Functions**: camelCase, pure where possible (marked with `/*#__PURE__*/`)
+- **Types**: PascalCase, explicit generic constraints
+- **Atoms**: prefixed with `$` (e.g., `$atom`, `$options`) - Nanostores convention
+- **Exports**: Tree-shaking friendly, use `/*#__PURE__*/` annotation
+
+### Async Patterns
+- Uses Nanostores `task()` wrapper for async operations
+- Debouncing via `setTimeout`/`clearTimeout` pattern (500ms default)
+- Subscriptions return `UnbindFn` for cleanup
+
+### State Management
+- **Persistent by default**: `sticky: true` uses `persistentAtom` with localStorage key `croct-nano|{slotId}`
+- **Ephemeral option**: Set `sticky: false` or `timeout` for session-only state
+- **Reactive options**: `resolvedAtom` from `@inox-tools/utils` handles atom-based options
+
+### Error Handling
+- Fetch errors log to console and fall back to fallback content
+- Already-loaded atoms stay loaded on refresh error (no fallback transition)
+
+## Important Files
+
+### Entry Points
+- `package/src/index.ts` - Public API, imports `croctPlugin.ts` for side effects
+- `package/dist/index.js` - Built ESM entry (published)
+- `package/dist/index.d.ts` - Type declarations
+
+### Build & Config
+- `package/build.ts` - Bun.build orchestrator: bundles, minifies, excludes deps, emits sourcemaps
+- `package/tsconfig.json` - Strict TS config for source + tests
+- `package/tsconfig.build.json` - Declaration-only emit for distribution
+- `package/.size-limit.json` - 5 bundle scenarios tracked in CI
+
+### Monorepo Config
+- `turbo.json` - Task orchestration: build depends on ^build, test depends on build
+- `.changeset/config.json` - Changesets versioning (public access, main branch)
+- Root `package.json` - Workspaces: docs, package, examples/*, fixture dirs
+
+### CI/CD
+- `.github/workflows/ci.yml` - Build, lint (prettier --check), test
+- `.github/workflows/release.yml` - Changeset-based release with npm provenance
+- `.github/workflows/size-limit.yml` - Bundle size enforcement on PRs
+- `.github/workflows/publish-preview.yml` - pkg-pr-new preview publishes
+
+## Runtime/Tooling Preferences
+
+### Required Runtime
+- **Bun 1.3.9+** (specified in `packageManager` field)
+- **Node 22** baseline for CI
+
+### Package Manager
+- Bun exclusively: `bun install`, `bun.lock` frozen lockfile
+- CI uses `--frozen-lockfile`
+
+### Build Tooling
+- **Bun.build()** for bundling (not Rollup/esbuild directly)
+- **TypeScript 5.8+** for declarations
+- **Size-limit** + esbuild-why for bundle analysis
+
+### Key Dependencies
+- `@croct/plug` (peer, required): Croct SDK
+- `nanostores`: Core state management
+- `@nanostores/persistent`: localStorage persistence
+- `@inox-tools/utils`: `resolvedAtom` for reactive options
+
+### Optional Peer Dependencies
+- `@nanostores/react`, `@nanostores/preact`, `@nanostores/solid`, `@nanostores/vue`
+
+## Testing & QA
+
+### Test Framework
+- **bun:test** native runner (not Jest/Vitest)
+- **jest-extended** matchers imported via `test/bun.setup.ts`
+- Mocking with `vi.fn()` from Bun
+
+### Test Files
+- `package/test/croctAtom.test.ts` - Integration tests with mocked SDK
+- `package/test/autoPatching.test.ts` - Store implementation tests
+
+### Running Tests
+```bash
+# Once with coverage
+bun test --coverage
+
+# Watch mode
+bun test --watch
+
+# Via turbo (builds first)
+bun run test
+```
+
+### CI Checks
+- Format check: `prettier --check`
+- Build: `bun run build` must succeed
+- Tests: `bun test` with coverage
+- Size limit: Bundle size must not exceed limits in `.size-limit.json`
+
+### Quality Gates
+- Turbo caching for builds (ignores tests/e2e)
+- Changesets required for version bumps
+- Size-limit enforced on PRs via GitHub Action
+- TODO tracking: GitHub Action auto-creates issues from TODO comments
+
+## Anti-Patterns (Avoid)
+
+- **No `as any` in new code**: Existing casts in library source are intentional for Nanostores internal widening
+- **No CommonJS**: ESM-only throughout
+- **No test file edits without running tests**: Test infrastructure exists but coverage should be maintained
+- **No orphan TODOs**: TODO tracking is active; leave explanatory comments or remove TODOs
+- **No backwards-compat shims**: Full cutover when changing APIs; no gradual migration wrappers
