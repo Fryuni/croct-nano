@@ -1,5 +1,5 @@
 ---
-"croct-nanostores": minor
+'croct-nanostores': minor
 ---
 
 Update dependencies to latest versions across the monorepo:

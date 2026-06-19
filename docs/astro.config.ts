@@ -9,6 +9,7 @@ import liveCode from 'astro-live-code';
 
 // https://astro.build/config
 export default defineConfig({
+    site: 'https://croct-nano-docs.vercel.app',
     integrations: [
         starlight({
             title: 'Croct Nanostores',

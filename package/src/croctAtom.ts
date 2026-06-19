@@ -1,6 +1,6 @@
 import type { FetchOptions, FetchResponse } from '@croct/plug/plug';
 import type { SlotContent, VersionedSlotId } from '@croct/plug/slot';
-import type { JsonObject } from '@croct/json';
+import type { JsonObject, JsonValue } from '@croct/json';
 import { persistentAtom } from '@nanostores/persistent';
 import { atom, onMount, task, type ReadableAtom, type WritableAtom } from 'nanostores';
 import { resolvedAtom } from '@inox-tools/utils/nano';
@@ -26,12 +26,30 @@ type InnerCroctAtom<
     refresh: () => Promise<void>;
 };
 
+type ReactiveJsonValue =
+    | JsonValue
+    | ReadableAtom<JsonValue | undefined>
+    | ReactiveJsonArray
+    | ReactiveJsonObject;
+
+type ReactiveJsonArray = ReactiveJsonValue[];
+
+type ReactiveJsonObject = {
+    [key: string]: ReactiveJsonValue | undefined;
+    [key: symbol]: never | undefined;
+};
+
+type ResolvedOptions = {
+    attributes?: JsonObject;
+    preferredLocale?: string;
+};
+
 type Options<P extends JsonObject, I extends VersionedSlotId> = Omit<
     FetchOptions<SlotContent<I, P>>,
     'fallback' | 'preferredLocale' | 'attributes'
 > & {
     preferredLocale?: string | ReadableAtom<string>;
-    attributes?: any;
+    attributes?: ReactiveJsonObject | ReadableAtom<JsonObject>;
     sticky?: boolean;
 };
 
@@ -43,20 +61,24 @@ export function croctContent<P extends JsonObject, const I extends VersionedSlot
     fallbackContent: SlotContent<I, P>,
     { preferredLocale: p, attributes: a = {}, sticky: s = true, ...options }: Options<P, I> = {},
 ): CroctAtom<P, I> {
-    const baseAtom = s
-        ? persistentAtom<State<I, P>>(
-              `croct-nano|${slotId}`,
-              { stage: 'initial', content: fallbackContent as P },
-              {
-                  listen: true,
-                  encode: JSON.stringify,
-                  decode: JSON.parse,
-              },
-          )
-        : atom<State<I, P>>({ stage: 'initial', content: fallbackContent as P });
-    const $options = resolvedAtom({ attributes: a, preferredLocale: p });
+    const baseAtom =
+        s && typeof window !== 'undefined'
+            ? persistentAtom<State<I, P>>(
+                  `croct-nano|${slotId}`,
+                  { stage: 'initial', content: fallbackContent as P },
+                  {
+                      listen: true,
+                      encode: JSON.stringify,
+                      decode: JSON.parse,
+                  },
+              )
+            : atom<State<I, P>>({ stage: 'initial', content: fallbackContent as P });
+    const $options = resolvedAtom({
+        attributes: a,
+        preferredLocale: p,
+    }) as ReadableAtom<ResolvedOptions>;
 
-    let lastAttrs: JsonObject;
+    let lastAttrs: ResolvedOptions | undefined;
     const refresh = () =>
         task(async () => {
             const attrs = $options.get();

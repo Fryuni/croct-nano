@@ -1,0 +1,20 @@
+diff --git a/index.js b/index.js
+--- a/index.js
++++ b/index.js
+@@ -7,14 +7,14 @@ let eventsEngine = { addEventListener() {}, removeEventListener() {} }
+ function testSupport() {
+   try {
+-    return typeof localStorage !== 'undefined'
++    return typeof window !== 'undefined' && typeof window.localStorage !== 'undefined'
+     /* node:coverage ignore next 4 */
+   } catch {
+     // In Privacy Mode access to localStorage will return error
+     return false
+   }
+ }
+ if (testSupport()) {
+-  storageEngine = localStorage
++  storageEngine = window.localStorage
+ }
+ 
+ export let windowPersistentEvents = {

@@ -21,7 +21,10 @@ export const setInterests = (interests: string) => {
         .edit()
         .set(
             'interests',
-            interests.split(',').map(i => i.trim()),
+            interests
+                .split(',')
+                .map(i => i.trim())
+                .filter(Boolean),
         )
         .save();
 };
@@ -47,8 +50,8 @@ export default () => {
             <form
                 onSubmit={e => {
                     e.preventDefault();
-                    const data = new FormData(e.target);
-                    setInterests(data.get('interests'));
+                    const data = new FormData(e.currentTarget);
+                    setInterests(String(data.get('interests') ?? ''));
                 }}
             >
                 <label>My interests: </label>
@@ -76,8 +79,8 @@ export default () => {
             <form
                 onSubmit={e => {
                     e.preventDefault();
-                    const data = new FormData(e.target);
-                    setInterests(data.get('interests'));
+                    const data = new FormData(e.currentTarget);
+                    setInterests(String(data.get('interests') ?? ''));
                 }}
             >
                 <label>My interests: </label>
@@ -105,8 +108,8 @@ export default () => {
             <form
                 onSubmit={e => {
                     e.preventDefault();
-                    const data = new FormData(e.target);
-                    setInterests(data.get('interests'));
+                    const data = new FormData(e.currentTarget);
+                    setInterests(String(data.get('interests') ?? ''));
                 }}
             >
                 <label>My interests: </label>
@@ -132,22 +135,14 @@ export default () => {
 </template>
 
 <script setup>
+import { ref } from 'vue';
 import { useStore } from '@nanostores/vue';
-import { exampleSlot } from '../../stores/croct';
+import { exampleSlot, setInterests } from '../../stores/croct';
 
 const example = useStore(exampleSlot);
-</script>
-<script>
-import { setInterests } from '../../stores/croct';
-export default {
-    data: () => ({
-        interests: '',
-    }),
-    methods: {
-        submit() {
-            setInterests(this.interests);
-        },
-    },
+const interests = ref('');
+const submit = () => {
+    setInterests(interests.value);
 };
 </script>
 ```

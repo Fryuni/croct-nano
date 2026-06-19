@@ -1,3 +1,37 @@
+diff --git a/src/lib/index.js b/src/lib/index.js
+--- a/src/lib/index.js
++++ b/src/lib/index.js
+@@ -1,3 +1,4 @@
++import { isUnifiedProcessor, unified } from '@astrojs/markdown-remark'
+ import remark from './remark.js'
+ import vite from './vite.js'
+ 
+@@ -16,12 +17,21 @@ export default function liveCode(options = {}) {
+   return {
+     name: 'astro-live-code',
+     hooks: {
+-      'astro:config:setup': ({ updateConfig }) => {
++      'astro:config:setup': ({ config, updateConfig }) => {
++        const processor = config.markdown.processor
++
++        if (isUnifiedProcessor(processor)) {
++          processor.options.remarkPlugins.push([remark, options])
++        } else {
++          updateConfig({
++            markdown: {
++              processor: unified({ remarkPlugins: [[remark, options]] }),
++            },
++          })
++        }
++
+         updateConfig({
+-          markdown: {
+-            remarkPlugins: [[remark, options]],
+-          },
+           vite: {
+             plugins: [vite(options)],
+           },
+         })
 diff --git a/src/lib/remark.js b/src/lib/remark.js
 index 7394cfe9396dd558a431abd63d27075a8f53b3c5..cd1f2f45f2854bdcf01ed9f98cd9c1d70697840b 100644
 --- a/src/lib/remark.js
