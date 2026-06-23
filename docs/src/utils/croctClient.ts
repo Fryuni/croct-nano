@@ -1,11 +1,12 @@
 import { croct } from 'croct-nanostores';
-import type { GlobalPlug } from '@croct/plug/plug.js';
 import { CROCT_APP_ID } from 'astro:env/client';
+import type { GlobalPlug } from '@croct/plug/plug';
 
 croct.plug({
     appId: CROCT_APP_ID,
     debug: import.meta.env.DEV,
     token: null,
+    disableCidMirroring: true,
     plugins: { 'auto-refresh-atom': true },
 });
 
