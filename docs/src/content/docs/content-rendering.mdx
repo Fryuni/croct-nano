@@ -114,18 +114,17 @@ const flashSale = croctContent(
 
 ## Auto-refresh
 
-Atoms automatically refresh when user behavior changes. The library listens for tracking events from the Croct SDK and triggers a content refresh so your UI stays in sync with the user's current context.
+Atoms automatically refresh when user behavior changes if the `auto-refresh-atom` plugin is enabled. Importing `croct` from `croct-nanostores` registers the plugin before `croct.plug()` runs, and the Croct SDK enables registered plugins by default:
 
 ```ts
 import { croct } from 'croct-nanostores';
 
 croct.plug({
     appId: '<YOUR_APP_ID>',
-    plugins: ['auto-refresh-atom'],
 });
 ```
 
-You can opt-out of this behavior by disabling the `auto-refresh-atom` plugin on your `croct.plug()` call:
+You can opt out of this behavior by disabling the `auto-refresh-atom` plugin on your `croct.plug()` call:
 
 ```ts title="src/croct.ts"
 import { croct } from 'croct-nanostores';
@@ -156,13 +155,13 @@ The following events cause all active atoms to refresh:
 
 ### How refresh works
 
-When a tracked event fires, the library doesn't refresh immediately. Instead, it uses a cascade strategy aligned with Croct's SLAs for event propagation. Since a single event on the server can trigger a chain of derived events (for example, a `userSignedUp` event may update user attributes, which in turn may match a new audience), the library refreshes three times — once per maximum link in the derivation chain:
+When a tracked event fires, the library doesn't refresh immediately. Instead, it uses a cascade strategy aligned with Croct's SLAs for event propagation. Since a single event on the server can trigger a chain of derived events (for example, a `userSignedUp` event may update user attributes, which in turn may match a new audience), the library starts refreshing after 500 ms and then repeats every 500 ms for the full propagation window:
 
 1. **First refresh** at 500 ms after the event
-2. **Second refresh** at 1,000 ms after the first
-3. **Third refresh** at 1,500 ms after the second
+2. **Ten additional refreshes** every 500 ms while derived events propagate
+3. **Final refresh** 5.5 seconds after the triggering event
 
-Each refresh captures any newly derived state, ensuring personalized content fully reflects the latest user data by the time the cascade completes. If the content didn't change across refreshes, no subscriber will be called and no component wil re-render.
+Each refresh captures any newly derived state, ensuring personalized content fully reflects the latest user data by the time the cascade completes. If the content didn't change across refreshes, no subscriber will be called and no component will re-render.
 
 :::tip
 You can also refresh an atom manually at any time by calling its `refresh()` method:
@@ -236,9 +235,7 @@ croctContent('slot@1', fallback, {
 
 ### How it works
 
-Internally, the library wraps the `attributes` value with a resolved atom that recursively walks the object tree, resolves every Nanostores atom it finds, and subscribes to all of them. The resulting flat object is passed to `croct.fetch()`. If you pass a plain object with no atoms, it behaves as a static value — attributes are sent with every fetch but don't trigger refreshes on their own.
-
-On each change, the library compares the new resolved attributes with the last fetched attributes by reference. If they are the same object, the fetch is skipped. This means the refresh only fires when an embedded atom produces a new value.
+Internally, the library wraps the `attributes` value with a resolved atom that recursively walks the object tree, resolves every Nanostores atom it finds, and subscribes to all of them. The resolved object is passed to `croct.fetch()` on each refresh. If you pass a plain object with no atoms, it behaves as a static value — attributes are sent with every fetch but don't trigger refreshes on their own.
 
 :::tip
 Reactive attributes compose naturally with [auto-refresh](#auto-refresh). When both are enabled, content refreshes on attribute changes _and_ on user behavior events, giving you full coverage without any manual wiring.

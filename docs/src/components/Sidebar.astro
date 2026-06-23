@@ -1,10 +1,13 @@
 ---
-import SidebarSublist from '@astrojs/starlight/components/SidebarSublist.astro';
 import MobileMenuFooter from '@astrojs/starlight/components/MobileMenuFooter.astro';
+import SidebarPersister from '@astrojs/starlight/components/SidebarPersister.astro';
+import SidebarSublist from '@astrojs/starlight/components/SidebarSublist.astro';
 import PartnerBadge from './PartnerBadge.astro';
 ---
 
-<SidebarSublist sublist={Astro.locals.starlightRoute.sidebar} />
+<SidebarPersister>
+    <SidebarSublist sublist={Astro.locals.starlightRoute.sidebar} />
+</SidebarPersister>
 
 <PartnerBadge />
 

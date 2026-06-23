@@ -1,4 +1,5 @@
-import './bun.setup';
+/// <reference types="bun" />
+
 import { afterEach, beforeAll, beforeEach, describe, expect, it, mock, vi } from 'bun:test';
 
 mock.restore();

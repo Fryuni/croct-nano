@@ -7,6 +7,7 @@ Unofficial Nanostores bindings for [Croct](https://croct.com) personalized conte
 **Purpose**: Bridge Croct's personalization SDK with Nanostores state management. Provides `croctContent()` factory for creating reactive atoms that fetch slot content, persist to localStorage, and auto-refresh when user interests/attributes change.
 
 **Key Features**:
+
 - Reactive atoms with `initial` → `loaded`/`fallback` state machine
 - Optional localStorage persistence (`sticky` option, default true)
 - Auto-refresh on user events (sign-in, profile changes, cart updates)
@@ -18,13 +19,13 @@ Unofficial Nanostores bindings for [Croct](https://croct.com) personalized conte
 
 ### Core Modules
 
-| File | Responsibility | Key Exports |
-|------|----------------|-------------|
-| `package/src/index.ts` | Public API barrel | `croct`, `croctContent`, `CroctAtom`, tracking functions |
-| `package/src/croctAtom.ts` | Atom factory & state machine | `croctContent()`, `CroctAtom` type, `refreshActive()` |
-| `package/src/croctPlugin.ts` | Event-driven refresh orchestration | Side-effect: registers `auto-refresh-atom` plugin |
-| `package/src/autoPatching.ts` | Batched tracking integration | `trackSessionField()`, `trackUserField()`, `trackCart()` |
-| `package/src/common.ts` | Shared SDK instance | `croct` (from `@croct/plug`), `UnbindFn` type |
+| File                          | Responsibility                     | Key Exports                                              |
+| ----------------------------- | ---------------------------------- | -------------------------------------------------------- |
+| `package/src/index.ts`        | Public API barrel                  | `croct`, `croctContent`, `CroctAtom`, tracking functions |
+| `package/src/croctAtom.ts`    | Atom factory & state machine       | `croctContent()`, `CroctAtom` type, `refreshActive()`    |
+| `package/src/croctPlugin.ts`  | Event-driven refresh orchestration | Side-effect: registers `auto-refresh-atom` plugin        |
+| `package/src/autoPatching.ts` | Batched tracking integration       | `trackSessionField()`, `trackUserField()`, `trackCart()` |
+| `package/src/common.ts`       | Shared SDK instance                | `croct` (from `@croct/plug`), `UnbindFn` type            |
 
 ### State Machine
 
@@ -125,11 +126,13 @@ bun run prepack
 ## Code Conventions & Common Patterns
 
 ### Language & Module System
+
 - **ESM-only**: `"type": "module"` in all package.json files
 - **No CommonJS**: No `.cjs` output, no `require()`
 - **TypeScript strict**: All strict flags enabled (`noImplicitAny`, `strictNullChecks`, `noUnusedLocals`, `noUnusedParameters`, `verbatimModuleSyntax`)
 
 ### Formatting (Prettier)
+
 Config: `prettier.config.js`
 
 ```javascript
@@ -148,44 +151,52 @@ Config: `prettier.config.js`
 - Self-documenting code: zero inline comments in source
 
 ### Naming & Patterns
+
 - **Functions**: camelCase, pure where possible (marked with `/*#__PURE__*/`)
 - **Types**: PascalCase, explicit generic constraints
 - **Atoms**: prefixed with `$` (e.g., `$atom`, `$options`) - Nanostores convention
 - **Exports**: Tree-shaking friendly, use `/*#__PURE__*/` annotation
 
 ### Async Patterns
+
 - Uses Nanostores `task()` wrapper for async operations
 - Debouncing via `setTimeout`/`clearTimeout` pattern (500ms default)
 - Subscriptions return `UnbindFn` for cleanup
 
 ### State Management
+
 - **Persistent by default**: `sticky: true` uses `persistentAtom` with localStorage key `croct-nano|{slotId}`
 - **Ephemeral option**: Set `sticky: false` or `timeout` for session-only state
 - **Reactive options**: `resolvedAtom` from `@inox-tools/utils` handles atom-based options
 
 ### Error Handling
+
 - Fetch errors log to console and fall back to fallback content
 - Already-loaded atoms stay loaded on refresh error (no fallback transition)
 
 ## Important Files
 
 ### Entry Points
+
 - `package/src/index.ts` - Public API, imports `croctPlugin.ts` for side effects
 - `package/dist/index.js` - Built ESM entry (published)
 - `package/dist/index.d.ts` - Type declarations
 
 ### Build & Config
+
 - `package/build.ts` - Bun.build orchestrator: bundles, minifies, excludes deps, emits sourcemaps
 - `package/tsconfig.json` - Strict TS config for source + tests
 - `package/tsconfig.build.json` - Declaration-only emit for distribution
 - `package/.size-limit.json` - 5 bundle scenarios tracked in CI
 
 ### Monorepo Config
+
 - `turbo.json` - Task orchestration: build depends on ^build, test depends on build
 - `.changeset/config.json` - Changesets versioning (public access, main branch)
-- Root `package.json` - Workspaces: docs, package, examples/*, fixture dirs
+- Root `package.json` - Workspaces: docs, package, examples/\*, fixture dirs
 
 ### CI/CD
+
 - `.github/workflows/ci.yml` - Build, lint (prettier --check), test
 - `.github/workflows/release.yml` - Changeset-based release with npm provenance
 - `.github/workflows/size-limit.yml` - Bundle size enforcement on PRs
@@ -194,39 +205,47 @@ Config: `prettier.config.js`
 ## Runtime/Tooling Preferences
 
 ### Required Runtime
+
 - **Bun 1.3.9+** (specified in `packageManager` field)
 - **Node 22** baseline for CI
 
 ### Package Manager
+
 - Bun exclusively: `bun install`, `bun.lock` frozen lockfile
 - CI uses `--frozen-lockfile`
 
 ### Build Tooling
+
 - **Bun.build()** for bundling (not Rollup/esbuild directly)
 - **TypeScript 5.8+** for declarations
 - **Size-limit** + esbuild-why for bundle analysis
 
 ### Key Dependencies
+
 - `@croct/plug` (peer, required): Croct SDK
 - `nanostores`: Core state management
 - `@nanostores/persistent`: localStorage persistence
 - `@inox-tools/utils`: `resolvedAtom` for reactive options
 
 ### Optional Peer Dependencies
+
 - `@nanostores/react`, `@nanostores/preact`, `@nanostores/solid`, `@nanostores/vue`
 
 ## Testing & QA
 
 ### Test Framework
+
 - **bun:test** native runner (not Jest/Vitest)
 - **jest-extended** matchers imported via `test/bun.setup.ts`
 - Mocking with `vi.fn()` from Bun
 
 ### Test Files
+
 - `package/test/croctAtom.test.ts` - Integration tests with mocked SDK
 - `package/test/autoPatching.test.ts` - Store implementation tests
 
 ### Running Tests
+
 ```bash
 # Once with coverage
 bun test --coverage
@@ -239,12 +258,14 @@ bun run test
 ```
 
 ### CI Checks
+
 - Format check: `prettier --check`
 - Build: `bun run build` must succeed
 - Tests: `bun test` with coverage
 - Size limit: Bundle size must not exceed limits in `.size-limit.json`
 
 ### Quality Gates
+
 - Turbo caching for builds (ignores tests/e2e)
 - Changesets required for version bumps
 - Size-limit enforced on PRs via GitHub Action

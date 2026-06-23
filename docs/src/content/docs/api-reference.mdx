@@ -20,14 +20,13 @@ import {
 
 The Croct SDK singleton, re-exported from [`@croct/plug`](https://docs.croct.com/reference/sdk/javascript/api/plug).
 
-Importing `croct` from `croct-nanostores` registers the `auto-refresh-atom` plugin definition as a side effect. To enable auto-refresh, add `'auto-refresh-atom'` to the `plugins` array when calling `croct.plug()`:
+Importing `croct` from `croct-nanostores` registers the `auto-refresh-atom` plugin definition as a side effect. Registered Croct plugins are enabled by default when you call `croct.plug()`:
 
 ```ts
 import { croct } from 'croct-nanostores';
 
 croct.plug({
     appId: '<YOUR_APP_ID>',
-    plugins: ['auto-refresh-atom'],
 });
 ```
 
@@ -44,10 +43,19 @@ Creates a reactive atom for a Croct [slot](https://docs.croct.com/explanation/sl
 ### Signature
 
 ```ts
+type CroctContentOptions<P extends JsonObject, I extends VersionedSlotId> = Omit<
+    FetchOptions<SlotContent<I, P>>,
+    'fallback' | 'preferredLocale' | 'attributes'
+> & {
+    preferredLocale?: string | ReadableAtom<string>;
+    attributes?: any;
+    sticky?: boolean;
+};
+
 function croctContent<P extends JsonObject, const I extends VersionedSlotId>(
     slotId: I,
     fallbackContent: SlotContent<I, P>,
-    options?: Omit<FetchOptions<SlotContent<I, P>>, 'fallback'>,
+    options?: CroctContentOptions<P, I>,
 ): CroctAtom<P, I>;
 ```
 
@@ -92,18 +100,18 @@ Design your fallback content as a sensible default experience. Since it's what u
 
 #### `options`
 
-**Type:** `Omit<FetchOptions<SlotContent<I, P>>, 'fallback'>` _(optional)_
+**Type:** `CroctContentOptions<P, I>` _(optional)_
 
-Additional options passed to the underlying [`croct.fetch()`](https://docs.croct.com/reference/sdk/javascript/api/plug/fetch) call. These are the same options supported by the Croct SDK's fetch method, except for `fallback` (which is handled by the `fallbackContent` parameter instead).
+Additional options passed to the underlying [`croct.fetch()`](https://docs.croct.com/reference/sdk/javascript/api/plug/fetch) call. These are the same options supported by the Croct SDK's fetch method, except for `fallback`, `preferredLocale`, and `attributes`, which Croct Nanostores handles so they can participate in reactive updates.
 
 Commonly used options include:
 
-| Option            | Type                             | Description                                                                                                                                                                       |
-| ----------------- | -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `sticky`          | `boolean`                        | Whether to persist the atom's state in `localStorage`. Defaults to `true`. Set to `false` for [ephemeral atoms](/content-rendering#opting-out-of-persistence).                    |
-| `timeout`         | `number`                         | Maximum time in milliseconds to wait for a response.                                                                                                                              |
-| `preferredLocale` | `string \| ReadableAtom<string>` | The locale to use for content personalization (e.g., `'en-US'`). Can be a Nanostores atom for automatic refresh on locale changes.                                                |
-| `attributes`      | `object`                         | Custom attributes to pass to the personalization engine. Values at any nesting level can be Nanostores atoms — see [reactive attributes](/content-rendering#reactive-attributes). |
+| Option            | Type                             | Description                                                                                                                                                                                           |
+| ----------------- | -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `sticky`          | `boolean`                        | Whether to persist the atom's state in `localStorage`. Defaults to `true`. Set to `false` for [ephemeral atoms](/content-rendering#opting-out-of-persistence).                                        |
+| `timeout`         | `number`                         | Maximum time in milliseconds to wait for a response.                                                                                                                                                  |
+| `preferredLocale` | `string \| ReadableAtom<string>` | The locale to use for content personalization (e.g., `'en-US'`). Can be a Nanostores atom for automatic refresh on locale changes.                                                                    |
+| `attributes`      | `any`                            | Custom attributes to pass to the personalization engine. The root object and values at any nesting level can be Nanostores atoms — see [reactive attributes](/content-rendering#reactive-attributes). |
 
 For the full list of supported options, see the [`croct.fetch()` reference](https://docs.croct.com/reference/sdk/javascript/api/plug/fetch).
 
